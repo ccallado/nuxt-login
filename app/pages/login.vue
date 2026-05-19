@@ -6,6 +6,10 @@ import type { LoginSchemaType } from '#shared/zod/login.schema'
 
 const toast = useToast()
 const serverError = ref<string | undefined>(undefined)
+
+const myCookie = useCookie('public_email')
+console.log('Cookie email:', myCookie.value)
+
 const fields: AuthFormField[] = [{
   name: 'email',
   type: 'email',

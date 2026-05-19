@@ -24,5 +24,12 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  runtimeConfig: {
+    secretJwtKey: "",
+    public: {
+      baseApi: ""
+    }
   }
 })
