@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import * as z from 'zod'
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
+import { loginSchema } from '#shared/zod/login.schema'
+import type { LoginSchemaType } from '#shared/zod/login.schema'
+// import { H3Error } from 'h3'
 
 const toast = useToast()
-
+const serverError = ref<string | undefined>(undefined)
 const fields: AuthFormField[] = [{
   name: 'email',
   type: 'email',
@@ -36,15 +38,28 @@ const providers = [{
   }
 }]
 
-const schema = z.object({
-  email: z.email('Invalid email'),
-  password: z.string('Password is required').min(8, 'Must be at least 8 characters')
-})
+async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
+  try {
+    serverError.value = undefined
 
-type Schema = z.output<typeof schema>
-
-function onSubmit(payload: FormSubmitEvent<Schema>) {
-  console.log('Submitted', payload)
+    const response = await $fetch('/api/login', {
+      method: 'POST',
+      body: {
+        email: payload.data.email,
+        password: payload.data.password
+      }
+    })
+    toast.add({ title: 'Success', description: 'Login successful' })
+    console.log({ response })
+  } catch (error) {
+    if (error instanceof Error && 'statusMessage' in error) {
+      // toast.add({ title: 'Error', description: error.statusMessage as string })
+      serverError.value = error.statusMessage as string
+    }
+    // if (error instanceof H3Error) {
+    //   toast.add({ title: 'Error', description: error.statusMessage })
+    // }
+  }
 }
 </script>
 
@@ -52,7 +67,7 @@ function onSubmit(payload: FormSubmitEvent<Schema>) {
   <div class="flex flex-col items-center justify-center gap-4 p-4">
     <UPageCard class="w-full max-w-md">
       <UAuthForm
-        :schema="schema"
+        :schema="loginSchema"
         :fields="fields"
         :providers="providers"
         title="Welcome back!"
@@ -66,7 +81,12 @@ function onSubmit(payload: FormSubmitEvent<Schema>) {
           <ULink to="#" class="text-primary font-medium" tabindex="-1">Forgot password?</ULink>
         </template>
         <template #validation>
-          <UAlert color="error" icon="i-lucide-info" title="Error signing in" />
+          <UAlert
+            v-if="serverError"
+            color="error"
+            icon="i-lucide-info"
+            :title="serverError"
+          />
         </template>
         <template #footer>
           By signing in, you agree to our <ULink to="#" class="text-primary font-medium">Terms of Service</ULink>.
