@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
-import { loginSchema } from '#shared/zod/login.schema'
-import type { LoginSchemaType } from '#shared/zod/login.schema'
+import { loginSchemaConf } from '#shared/zod/login.schema'
+import type { LoginSchemaConfType } from '#shared/zod/login.schema'
 import type { NuxtError } from '#app'
 
 const { fetch: refreshSession } = useUserSession()
@@ -24,9 +24,12 @@ const fields: AuthFormField[] = [{
   required: true,
   defaultValue: '12341234'
 }, {
-  name: 'remember',
-  label: 'Remember me',
-  type: 'checkbox'
+  name: 'confirmPassword',
+  label: 'Confirm Password',
+  type: 'password',
+  placeholder: 'Confirm your password',
+  required: true,
+  defaultValue: '12341234'
 }]
 
 const providers = [{
@@ -43,11 +46,9 @@ const providers = [{
   }
 }]
 
-async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
+async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
   try {
-    serverError.value = undefined
-
-    const response = await $fetch('/api/login', {
+    const response = await $fetch('/api/register', {
       method: 'POST',
       body: {
         email: payload.data.email,
@@ -72,22 +73,22 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
     </pre> -->
     <UPageCard class="w-full max-w-md">
       <UAuthForm
-        :schema="loginSchema"
+        :schema="loginSchemaConf"
         :fields="fields"
         :providers="providers"
         title="Welcome back!"
         icon="i-lucide-lock"
         @submit="onSubmit"
       >
-        <template #description>
+        <!-- <template #description>
           Don't have an account?
           <ULink
-            to="/register"
+            to="#"
             class="text-primary font-medium"
           >
             Sign up
           </ULink>.
-        </template>
+        </template> -->
         <template #password-hint>
           <ULink
             to="#"
