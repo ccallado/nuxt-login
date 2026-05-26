@@ -4,6 +4,10 @@ import { loginSchema } from '#shared/zod/login.schema'
 import type { LoginSchemaType } from '#shared/zod/login.schema'
 import type { NuxtError } from '#app'
 
+definePageMeta({
+  middleware: ['authenticated']
+})
+
 const { fetch: refreshSession } = useUserSession()
 
 const toast = useToast()
@@ -57,7 +61,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
     toast.add({ title: 'Success', description: 'Login successful' })
     console.log({ response })
     await refreshSession()
-    await navigateTo('/dashboard')
+    await navigateTo('/admin/dashboard')
   } catch (error) {
     const err = error as NuxtError
     toast.add({ title: 'Error', description: err.statusMessage, color: 'error' })

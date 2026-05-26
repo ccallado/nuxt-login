@@ -3,6 +3,9 @@
 
 <template>
   <UApp>
-    <NuxtPage />
+    <!-- <UColorModeButton /> -->
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </UApp>
 </template>

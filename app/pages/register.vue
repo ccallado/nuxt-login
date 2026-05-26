@@ -4,6 +4,10 @@ import { loginSchemaConf } from '#shared/zod/login.schema'
 import type { LoginSchemaConfType } from '#shared/zod/login.schema'
 import type { NuxtError } from '#app'
 
+definePageMeta({
+  middleware: ['authenticated']
+})
+
 const { fetch: refreshSession } = useUserSession()
 
 const toast = useToast()
@@ -58,7 +62,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
     toast.add({ title: 'Success', description: 'Login successful' })
     console.log({ response })
     await refreshSession()
-    await navigateTo('/dashboard')
+    await navigateTo('/admin/dashboard')
   } catch (error) {
     const err = error as NuxtError
     toast.add({ title: 'Error', description: err.statusMessage, color: 'error' })
@@ -89,7 +93,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
             Sign up
           </ULink>.
         </template> -->
-        <template #password-hint>
+        <!-- <template #password-hint>
           <ULink
             to="#"
             class="text-primary
@@ -97,7 +101,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
             tabindex="-1"
           >Forgot password?
           </ULink>
-        </template>
+        </template> -->
         <template #validation>
           <UAlert
             v-if="serverError"
