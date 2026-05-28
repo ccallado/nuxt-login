@@ -21,7 +21,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-05-21',
 
   hub: {
-    db: 'postgresql'
+    // db: 'postgresql'
+    db: 'sqlite'
   },
 
   eslint: {
