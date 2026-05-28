@@ -9,8 +9,6 @@ export default eventHandler(async (event) => {
 
   const user = await db.select().from(users).where(eq(users.email, email)).limit(1)
 
-  // console.log({ usuario: user, longitud: user.length })
-
   if (user.length != 0) {
     throw createError({
       statusCode: 400,
@@ -19,8 +17,6 @@ export default eventHandler(async (event) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10)
-
-  // console.log(email, hashedPassword)
 
   // Alta de usuario
   await db.insert(users).values({

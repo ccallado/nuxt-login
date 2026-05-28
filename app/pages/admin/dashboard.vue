@@ -20,15 +20,15 @@ async function logout() {
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar>
+      <!-- <UDashboardToolbar> -->
         <!-- NOTE: The `-mx-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
-        <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
-      </UDashboardToolbar>
+        <!-- <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
+      </UDashboardToolbar> -->
     </template>
 
     <template #body>
       <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full lg:max-w-2xl mx-auto">
-        <h1>Bienvenido {{ user.email }}</h1>
+        <h1>Bienvenido {{ user?.email }}</h1>
         <u-button @click="logout">
           Logout
         </u-button>

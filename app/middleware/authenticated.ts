@@ -8,8 +8,4 @@ export default defineNuxtRouteMiddleware((to) => {
   if (!loggedIn.value && to.path != '/login' && to.path != '/register') {
     return navigateTo('/login')
   }
-
-  // if (!loggedIn.value && to.path != '/register') {
-  //   return navigateTo('/register')
-  // }
 })

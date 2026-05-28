@@ -1,6 +1,8 @@
 <script lang="ts" setup>
-import type { FormSubmitEvent } from '@nuxt/ui';
-import z from 'zod';
+import type { FormSubmitEvent } from '@nuxt/ui'
+import { profileSchema } from '#shared/zod/profile.schema'
+import type { ProfileSchemaType } from '#shared/zod/profile.schema'
+
 const fileRef = ref<HTMLInputElement>()
 
 definePageMeta({
@@ -8,33 +10,45 @@ definePageMeta({
   layout: 'dashboard-layout'
 })
 
-const profileSchema = z.object({
-  name: z.string().min(2, 'Too short'),
-  email: z.string().email('Invalid email'),
-  username: z.string().min(2, 'Too short'),
-  avatar: z.string().optional(),
-  bio: z.string().optional()
+// Nos traemos la sesión del usuario
+const { user, fetch: refreshSession } = useUserSession()
+
+// Pero también podríamos traernos los datos de drizzle
+const { data: userDB } = await useFetch('/api/user/profile', {
+  method: 'GET'
 })
 
-type ProfileSchema = z.output<typeof profileSchema>
-
-const profile = reactive<Partial<ProfileSchema>>({
-  name: 'Benjamin Canac',
-  email: 'ben@nuxtlabs.com',
-  username: 'benjamincanac',
+const profile = reactive<Partial<ProfileSchemaType>>({
+  name: userDB?.value?.nombre || '',
+  email: userDB?.value?.email || '',
+  username: userDB?.value?.name || '',
   avatar: undefined,
-  bio: undefined
+  bio: userDB?.value?.avatar || ''
 })
 
 const toast = useToast()
-async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
+async function onSubmit(event: FormSubmitEvent<ProfileSchemaType>) {
+  try {
+    await $fetch('/api/user/profile', {
+      method: 'PUT',
+      body: event?.data
+    })
+    await refreshSession()
+  } catch (error) {
+    toast.add({
+      title: 'Error',
+      description: 'Failed to update your settings.',
+      icon: 'i-lucide-x',
+      color: 'error'
+    })
+  }
+
   toast.add({
     title: 'Success',
     description: 'Your settings have been updated.',
     icon: 'i-lucide-check',
     color: 'success'
   })
-  console.log(event.data)
 }
 
 function onFileChange(e: Event) {
@@ -59,6 +73,12 @@ function onFileClick() {
     :state="profile"
     @submit="onSubmit"
   >
+    <UPageCard
+      variant="subtle"
+      class="mb-4"
+    >
+      {{ user || '' }}
+    </UPageCard>
     <UPageCard
       title="Profile"
       description="These informations will be displayed publicly."

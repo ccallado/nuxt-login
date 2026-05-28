@@ -60,7 +60,6 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
       }
     })
     toast.add({ title: 'Success', description: 'Login successful' })
-    console.log({ response })
     await refreshSession()
     await navigateTo('/admin/dashboard')
   } catch (error) {

@@ -15,26 +15,21 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // const hashedPassword = await bcrypt.hash(password, 10)
-
-  // console.log({ tabla: user[0].password, pantalla: hashedPassword })
-
   const isPasswordValid = await bcrypt.compare(password, user[0].password)
 
   if (!isPasswordValid) {
-    console.log('ERROR Invalid password')
     throw createError({
       statusCode: 401,
       statusMessage: 'Invalid password'
     })
   }
 
-  console.log('Login successful')
-
   await setUserSession(event, {
     user: {
       name: user[0].name || email.split('@')[0],
-      email
+      email: user[0].email,
+      avatar: user[0].avatar,
+      nombre: user[0].nombre
     }
   })
 

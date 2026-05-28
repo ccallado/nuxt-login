@@ -5,7 +5,8 @@ import type { LoginSchemaType } from '#shared/zod/login.schema'
 import type { NuxtError } from '#app'
 
 definePageMeta({
-  middleware: ['authenticated']
+  middleware: ['authenticated'],
+  layout: 'default-layout'
 })
 
 const { fetch: refreshSession } = useUserSession()
@@ -59,7 +60,6 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
       }
     })
     toast.add({ title: 'Success', description: 'Login successful' })
-    console.log({ response })
     await refreshSession()
     await navigateTo('/admin/dashboard')
   } catch (error) {
@@ -71,9 +71,6 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
 
 <template>
   <div class="flex flex-col items-center justify-center gap-4 p-4">
-    <!-- <pre>
-      user: {{ user }} loggedIn: {{ loggedIn }}
-    </pre> -->
     <UPageCard class="w-full max-w-md">
       <UAuthForm
         :schema="loginSchema"

@@ -1,26 +1,36 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui';
-
-definePageMeta({
-  middleware: ['authenticated'],
-//   layout: 'dashboard-layout'
-})
+import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
 
 const open = ref(false)
 
 const links = [[{
-  label: 'Dashboard',
-  to: '/admin/dashboard',
-  icon: 'i-lucide-house',
+  label: 'Home',
+  icon: 'i-lucide-users',
+  to: '/',
   onSelect: () => {
     open.value = false
   }
 }, {
-  label: 'Users',
-  to: '/admin/user',
+  label: 'Login',
+  icon: 'i-lucide-house',
+  to: '/login',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Register',
+  icon: 'i-lucide-inbox',
+  to: '/register',
+  badge: '4',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'dashboard',
   icon: 'i-lucide-users',
+  to: '/admin/dashboard',
   onSelect: () => {
     open.value = false
   }
@@ -61,12 +71,14 @@ const links = [[{
   icon: 'i-lucide-message-circle',
   to: 'https://github.com/nuxt-ui-templates/dashboard',
   target: '_blank'
-}, {
+},
+ {
   label: 'Help & Support',
   icon: 'i-lucide-info',
   to: 'https://github.com/nuxt-ui-templates/dashboard',
   target: '_blank'
-}]] satisfies NavigationMenuItem[][]
+}
+]] satisfies NavigationMenuItem[][]
 
 const groups = computed(() => [{
   id: 'links',
@@ -86,7 +98,7 @@ const groups = computed(() => [{
 </script>
 
 <template>
-  <UDashboardGroup unit ='rem'>
+  <UDashboardGroup unit="rem">
     <UDashboardSidebar
       id="default"
       v-model:open="open"
@@ -119,6 +131,7 @@ const groups = computed(() => [{
           class="mt-auto"
         />
       </template>
+
       <template #footer="{ collapsed }">
         <UserMenu :collapsed="collapsed" />
       </template>
@@ -126,11 +139,6 @@ const groups = computed(() => [{
 
     <UDashboardSearch :groups="groups" />
 
-    <!-- <NavbarDashboard /> -->
-
     <slot />
-
-
-    <!-- <NotificationsSlideover /> -->
   </UDashboardGroup>
 </template>
