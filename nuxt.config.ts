@@ -21,8 +21,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-05-21',
 
   hub: {
-    // db: 'postgresql'
-    db: 'sqlite'
+    db: {
+      dialect: 'postgresql',
+      connection: {
+        url: process.env.POSTGRES_URL // Variable de entorno en Vercel
+      },
+      applyMigrationsDuringBuild: false // Crucial para evitar el error de build
+    }
   },
 
   eslint: {
