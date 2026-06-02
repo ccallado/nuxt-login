@@ -24,7 +24,7 @@ export default eventHandler(async (event) => {
     name: user[0].name,
     email: user[0].email,
     nombre: user[0].nombre,
-    avatar: user[0].avatar
-
+    avatar: user[0].avatar,
+    bio: user[0].bio
   }
 })

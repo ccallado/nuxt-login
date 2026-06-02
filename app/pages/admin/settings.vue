@@ -6,7 +6,7 @@ definePageMeta({
   layout: 'dashboard-layout'
 })
 
-const lenks = [[{
+const links = [[{
   label: 'General',
   icon: 'i-lucide-user',
   to: '/admin/settings',
@@ -46,7 +46,7 @@ const lenks = [[{
       <UDashboardToolbar>
         <!-- NOTE: The `-mx-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
         <UNavigationMenu
-          :items="lenks"
+          :items="links"
           highlight
           class="-mx-1 flex-1"
         />

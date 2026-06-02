@@ -18,12 +18,12 @@ const { data: userDB } = await useFetch('/api/user/profile', {
   method: 'GET'
 })
 
-const profile = reactive<Partial<ProfileSchemaType>>({
+const profileState = reactive<Partial<ProfileSchemaType>>({
   name: userDB?.value?.nombre || '',
   email: userDB?.value?.email || '',
   username: userDB?.value?.name || '',
-  avatar: undefined,
-  bio: userDB?.value?.avatar || ''
+  avatar: userDB?.value?.avatar || '',
+  bio: userDB?.value?.bio || ''
 })
 
 const toast = useToast()
@@ -51,14 +51,32 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchemaType>) {
   })
 }
 
-function onFileChange(e: Event) {
+async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
 
   if (!input.files?.length) {
     return
   }
 
-  profile.avatar = URL.createObjectURL(input.files[0]!)
+  const file = input.files[0]!
+
+  profileState.avatar = URL.createObjectURL(file)
+
+  //Enviar al servidor
+  const formData = new FormData()
+  formData.append('avatar', file)
+
+  try {
+    const response = await $fetch('/api/user/upload-avatar', {
+      method: 'PUT',
+      body: formData
+    })
+
+    // Actualizar con la URL del servidor
+    profileState.avatar = response.avatar
+  } catch (error) {
+    console.error('Error uploading:', error)
+  }
 }
 
 function onFileClick() {
@@ -70,7 +88,7 @@ function onFileClick() {
   <UForm
     id="settings"
     :schema="profileSchema"
-    :state="profile"
+    :state="profileState"
     @submit="onSubmit"
   >
     <UPageCard
@@ -104,7 +122,7 @@ function onFileClick() {
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
         <UInput
-          v-model="profile.name"
+          v-model="profileState.name"
           autocomplete="off"
         />
       </UFormField>
@@ -117,7 +135,7 @@ function onFileClick() {
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
         <UInput
-          v-model="profile.email"
+          v-model="profileState.email"
           type="email"
           autocomplete="off"
         />
@@ -131,7 +149,7 @@ function onFileClick() {
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
         <UInput
-          v-model="profile.username"
+          v-model="profileState.username"
           type="username"
           autocomplete="off"
         />
@@ -145,8 +163,8 @@ function onFileClick() {
       >
         <div class="flex flex-wrap items-center gap-3">
           <UAvatar
-            :src="profile.avatar"
-            :alt="profile.name"
+            :src="profileState.avatar"
+            :alt="profileState.name"
             size="lg"
           />
           <UButton
@@ -172,7 +190,7 @@ function onFileClick() {
         :ui="{ container: 'w-full' }"
       >
         <UTextarea
-          v-model="profile.bio"
+          v-model="profileState.bio"
           :rows="5"
           autoresize
           class="w-full"

@@ -14,11 +14,10 @@ const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 const { user, clear: clearSession } = useUserSession()
 
 const usuario = computed(() => ({
-  // name: 'Benjamin Canac',
   name: user?.value?.nombre || '',
   avatar: {
-    src: 'https://github.com/benjamincanac.png',
-    alt: 'Benjamin Canac'
+    src: user?.value?.avatar || '',
+    alt: user?.value?.nombre || ''
   }
 }))
 

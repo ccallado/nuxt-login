@@ -28,8 +28,9 @@ export default defineEventHandler(async (event) => {
     user: {
       name: user[0].name || email.split('@')[0],
       email: user[0].email,
+      nombre: user[0].nombre,
       avatar: user[0].avatar,
-      nombre: user[0].nombre
+      bio: user[0].bio
     }
   })
 
