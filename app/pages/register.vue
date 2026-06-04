@@ -70,7 +70,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4">
+  <div class="flex flex-col items-center justify-center gap-4 p-4 h-screen">
     <!-- <pre>
       user: {{ user }} loggedIn: {{ loggedIn }}
     </pre> -->

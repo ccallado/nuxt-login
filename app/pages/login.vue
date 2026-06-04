@@ -70,7 +70,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4">
+  <div class="flex flex-col items-center justify-center gap-4 p-4 h-screen">
     <UPageCard class="w-full max-w-md">
       <UAuthForm
         :schema="loginSchema"
@@ -91,7 +91,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
         </template>
         <template #password-hint>
           <ULink
-            to="#"
+            to="/auth/forgot-password"
             class="text-primary
             font-medium"
             tabindex="-1"

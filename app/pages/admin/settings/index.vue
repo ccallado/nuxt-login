@@ -92,12 +92,6 @@ function onFileClick() {
     @submit="onSubmit"
   >
     <UPageCard
-      variant="subtle"
-      class="mb-4"
-    >
-      {{ user || '' }}
-    </UPageCard>
-    <UPageCard
       title="Profile"
       description="These informations will be displayed publicly."
       variant="naked"

@@ -2,6 +2,7 @@
 import type { FormError, FormSubmitEvent } from '@nuxt/ui'
 import { passwordSchema } from '#shared/zod/password.schema'
 import type { PasswordSchemaType } from '#shared/zod/password.schema'
+import type { NuxtError } from '#app'
 
 definePageMeta({
   middleware: ['authenticated'],
@@ -41,9 +42,10 @@ async function onSubmit(event: FormSubmitEvent<PasswordSchemaType>) {
     await clearSession()
     await navigateTo('/login')
   } catch (error) {
+    const err = error as NuxtError
     toast.add({
       title: 'Error',
-      description: 'Failed to update your password.',
+      description: err.statusText || 'Failed to update your password.',
       icon: 'i-lucide-x',
       color: 'error'
     })

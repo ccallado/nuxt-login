@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils', '@nuxthub/core'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils', '@nuxthub/core', 'nuxt-nodemailer'],
   devtools: {
     enabled: true
   },
@@ -8,12 +8,21 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
+    nodemailer: {
+      host: '',
+      port: 2525,
+      auth: {
+        user: '',
+        pass: ''
+      }
+    },
+
     secretJwtKey: '',
     public: {
-      baseApi: ''
+      baseApi: '',
+      appUrl: process.env.APP_URL || 'http://localhost:3000'
     }
   },
-
   routeRules: {
     '/': { prerender: true }
   },

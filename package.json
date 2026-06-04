@@ -30,7 +30,10 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^8.0.0",
     "eslint": "^10.3.0",
+    "nodemailer": "^8.0.10",
+    "nuxt-nodemailer": "^1.1.4",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.2.8"
   },
