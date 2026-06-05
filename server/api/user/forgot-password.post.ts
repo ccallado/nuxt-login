@@ -31,7 +31,9 @@ export default eventHandler(async (event) => {
 
   try {
     // URL de reset
-    const resetUrl = `${config.public.appUrl}/auth/change-password?token=${token}`
+    // const resetUrl = `${config.public.appUrl}/auth/change-password?token=${token}`
+    const url = getRequestURL(event)
+    const resetUrl = `${url.origin}/auth/change-password?token=${token}`
 
     // Enviar el email de restablecimiento de contraseña
     const { sendMail } = useNodeMailer()
