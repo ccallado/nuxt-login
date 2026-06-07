@@ -11,6 +11,8 @@ definePageMeta({
 const { fetch: refreshSession } = useUserSession()
 
 const toast = useToast()
+const loading = ref(false)
+
 const serverError = ref<string | undefined>(undefined)
 
 const fields: AuthFormField[] = [{
@@ -52,19 +54,22 @@ const providers = [{
 
 async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
   try {
-    const response = await $fetch('/api/register', {
+    loading.value = true
+    const response = await $fetch('/api/user/register', {
       method: 'POST',
       body: {
         email: payload.data.email,
         password: payload.data.password
       }
     })
-    toast.add({ title: 'Success', description: 'Login successful' })
-    await refreshSession()
-    await navigateTo('/admin/dashboard')
+    toast.add({ title: 'Atención', description: 'Verifique el correo.' })
+    // await refreshSession()
+    // await navigateTo('/admin/dashboard')
   } catch (error) {
     const err = error as NuxtError
-    toast.add({ title: 'Error', description: err.statusMessage, color: 'error' })
+    toast.add({ title: 'Error', description: err.statusText, color: 'error' })
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -79,6 +84,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
         :schema="loginSchemaConf"
         :fields="fields"
         :providers="providers"
+        :loading="loading"
         title="Welcome back!"
         icon="i-lucide-lock"
         @submit="onSubmit"

@@ -41,7 +41,8 @@ export default defineEventHandler(async (event) => {
       nombre: updateUser[0].nombre,
       avatar: updateUser[0].avatar,
       bio: updateUser[0].bio
-    }
+    },
+    loggedInAt: Date.now()
   })
 
   return {

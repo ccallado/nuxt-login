@@ -29,6 +29,20 @@
       "when": 1780067096034,
       "tag": "0003_motionless_rogue",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780660286315,
+      "tag": "0004_giant_gwen_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780674796976,
+      "tag": "0005_right_valkyrie",
+      "breakpoints": true
     }
   ]
 }

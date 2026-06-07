@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils', '@nuxthub/core', 'nuxt-nodemailer'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils', '@nuxthub/core', 'nuxt-nodemailer', 'nuxt-resend'],
   devtools: {
     enabled: true
   },
@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     nodemailer: {
       host: '',
-      port: 2525,
+      port: 587,
       auth: {
         user: '',
         pass: ''
@@ -39,6 +39,14 @@ export default defineNuxtConfig({
     }
   },
 
+  vite: {
+    optimizeDeps: {
+      include: [
+        'zod', // Fuerza a Vite a pre-empaquetar Zod desde el inicio
+      ]
+    }
+  },
+
   eslint: {
     config: {
       stylistic: {
@@ -46,6 +54,5 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
-  },
-
+  }
 })

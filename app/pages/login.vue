@@ -12,6 +12,8 @@ definePageMeta({
 const { fetch: refreshSession } = useUserSession()
 
 const toast = useToast()
+const loading = ref(false)
+
 const serverError = ref<string | undefined>(undefined)
 
 const fields: AuthFormField[] = [{
@@ -50,9 +52,10 @@ const providers = [{
 
 async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
   try {
+    loading.value = true
     serverError.value = undefined
 
-    const response = await $fetch('/api/login', {
+    const response = await $fetch('/api/user/login', {
       method: 'POST',
       body: {
         email: payload.data.email,
@@ -64,7 +67,9 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
     await navigateTo('/admin/dashboard')
   } catch (error) {
     const err = error as NuxtError
-    toast.add({ title: 'Error', description: err.statusMessage, color: 'error' })
+    toast.add({ title: 'Error', description: err.statusText, color: 'error' })
+  } finally {
+    loading.value = false
   }
 }
 </script>
