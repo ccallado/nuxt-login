@@ -42,13 +42,15 @@ const providers = [{
   label: 'Google',
   icon: 'i-simple-icons-google',
   onClick: () => {
+    window.location.href = '/api/auth/google'
     toast.add({ title: 'Google', description: 'Login with Google' })
   }
 }, {
   label: 'GitHub',
   icon: 'i-simple-icons-github',
   onClick: () => {
-    toast.add({ title: 'GitHub', description: 'Login with GitHub' })
+    window.location.href = '/api/auth/github'
+    // toast.add({ title: 'GitHub', description: 'Login with GitHub' })
   }
 }]
 

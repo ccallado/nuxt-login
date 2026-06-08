@@ -4,11 +4,14 @@ import type { ForgotPasswordSchemaType } from '#shared/zod/forgot-password.schem
 import type { NuxtError } from '#app'
 
 const toast = useToast()
+const loading = ref(false)
+const sended = ref(false)
 
 const state = reactive({ email: 'ccallado@hotmail.com' })
 
 const onSubmit = async (event: { data: ForgotPasswordSchemaType }) => {
   try {
+    loading.value = true
     await $fetch('/api/user/forgot-password', {
       method: 'POST',
       body: event.data
@@ -19,6 +22,7 @@ const onSubmit = async (event: { data: ForgotPasswordSchemaType }) => {
       icon: 'i-lucide-check',
       color: 'success'
     })
+    sended.value = true
   } catch (error) {
     const err = error as NuxtError
     toast.add({
@@ -26,6 +30,8 @@ const onSubmit = async (event: { data: ForgotPasswordSchemaType }) => {
       description: err.statusText || 'No es un correo válido',
       color: 'error'
     })
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -55,6 +61,8 @@ const onSubmit = async (event: { data: ForgotPasswordSchemaType }) => {
         <UButton
           type="submit"
           class="w-full"
+          :loading="loading"
+          :disabled="sended"
         >
           Send Reset Link
         </UButton>

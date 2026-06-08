@@ -40,14 +40,20 @@ const providers = [{
   label: 'Google',
   icon: 'i-simple-icons-google',
   onClick: () => {
+    window.location.href = '/api/auth/google'
     toast.add({ title: 'Google', description: 'Login with Google' })
   }
 }, {
   label: 'GitHub',
   icon: 'i-simple-icons-github',
   onClick: () => {
+    window.location.href = '/api/auth/github'
     toast.add({ title: 'GitHub', description: 'Login with GitHub' })
   }
+  // onClick: async () => {
+  //   await navigateTo('/api/auth/github', { external: true }
+  //   toast.add({ title: 'GitHub', description: 'Login with GitHub' })
+  // }
 }]
 
 async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
@@ -81,6 +87,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
         :schema="loginSchema"
         :fields="fields"
         :providers="providers"
+        :loading="loading"
         title="Welcome back!"
         icon="i-lucide-lock"
         @submit="onSubmit"

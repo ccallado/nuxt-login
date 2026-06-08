@@ -12,6 +12,7 @@ import type { NuxtError } from '#app'
 const toast = useToast()
 const route = useRoute()
 const token = route.query.token
+const loading = ref(false)
 
 const password = reactive<Partial<NewpasswordSchemaType>>({
   userId: 0,
@@ -43,6 +44,7 @@ if (password.userId === 0) {
 
 async function onSubmit(event: FormSubmitEvent<NewpasswordSchemaType>) {
   try {
+    loading.value = true
     await $fetch('/api/user/update-new-password', {
       method: 'PUT',
       body: event?.data
@@ -62,6 +64,8 @@ async function onSubmit(event: FormSubmitEvent<NewpasswordSchemaType>) {
       icon: 'i-lucide-x',
       color: 'error'
     })
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -76,6 +80,7 @@ async function onSubmit(event: FormSubmitEvent<NewpasswordSchemaType>) {
       <UForm
         :schema="newpasswordSchema"
         :state="password"
+        :loading="loading"
         class="flex flex-col gap-4 max-w-xs"
         @submit="onSubmit"
       >

@@ -25,6 +25,6 @@ try {
 
 <template>
   <div>
-
+    .
   </div>
 </template>
