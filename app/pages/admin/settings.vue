@@ -3,7 +3,8 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 definePageMeta({
   middleware: ['authenticated'],
-  layout: 'dashboard-layout'
+  layout: 'dashboard-layout',
+  roles: ['admin']
 })
 
 const links = [[{

@@ -30,7 +30,8 @@ export default eventHandler(async (event) => {
         password: hashedPassword,
         avatar: '',
         bio: '',
-        nombre: email.split('@')[0]
+        nombre: email.split('@')[0],
+        role: ['user']
         // createdAt: new Date().getTime()
       }).returning({ insertedId: users.id })
       // 3. Inserta Account

@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 definePageMeta({
   middleware: ['authenticated'],
-  layout: 'dashboard-layout'
+  layout: 'dashboard-layout',
+  roles: ['user']
 })
 </script>
 

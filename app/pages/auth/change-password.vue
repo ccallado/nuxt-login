@@ -6,7 +6,8 @@ import type { NuxtError } from '#app'
 
 // definePageMeta({
 //   middleware: ['authenticated'],
-//   layout: 'dashboard-layout'
+//   layout: 'dashboard-layout',
+//  roles: ['user']
 // })
 
 const toast = useToast()

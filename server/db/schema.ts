@@ -1,4 +1,8 @@
+import { sql } from 'drizzle-orm'
 import { pgTable, text, serial, timestamp, integer, unique, boolean } from 'drizzle-orm/pg-core'
+
+// Definición de roles válidos
+export const rolesEnum = ['user', 'editor', 'admin'] as const
 
 export const users = pgTable('users', {
   id: serial().primaryKey(),
@@ -10,7 +14,11 @@ export const users = pgTable('users', {
   nombre: text().notNull().default('vacío'),
   bio: text(),
   createdAt: timestamp().notNull().defaultNow(),
-  modifiedAt: timestamp().notNull().defaultNow()
+  modifiedAt: timestamp().notNull().defaultNow(),
+  role: text('role', { enum: rolesEnum })
+    .array() // 👈 Transforma el campo en un array nativo (text[])
+    .notNull()
+    .default(sql`ARRAY['user']::text[]`)
 })
 
 export const account = pgTable('account', {

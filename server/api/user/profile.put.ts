@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { email, name, username, avatar, bio } = await readValidatedBody(event, profileSchema.parse)
+  const { email, name, username, avatar, bio, role } = await readValidatedBody(event, profileSchema.parse)
 
   const user = await db.select().from(users).where(eq(users.email, session?.user?.email)).limit(1)
 
@@ -29,7 +29,8 @@ export default defineEventHandler(async (event) => {
     email: email,
     name: username,
     avatar: avatar,
-    bio: bio
+    bio: bio,
+    role: role
     // createdAt: new Date().getTime()
   }).where(eq(users.email, session?.user?.email)).returning()
 
@@ -40,7 +41,8 @@ export default defineEventHandler(async (event) => {
       email: updateUser[0].email,
       nombre: updateUser[0].nombre,
       avatar: updateUser[0].avatar,
-      bio: updateUser[0].bio
+      bio: updateUser[0].bio,
+      role: updateUser[0].role
     },
     loggedInAt: Date.now()
   })

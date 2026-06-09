@@ -1,7 +1,8 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: ['authenticated'],
-  layout: 'dashboard-layout'
+  layout: 'dashboard-layout',
+  roles: ['user'] // Solo los administradores pueden entrar aquí
 })
 
 const { user, clear: clearSession } = useUserSession()

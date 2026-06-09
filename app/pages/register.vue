@@ -5,7 +5,9 @@ import type { LoginSchemaConfType } from '#shared/zod/login.schema'
 import type { NuxtError } from '#app'
 
 definePageMeta({
-  middleware: ['authenticated']
+  middleware: ['authenticated'],
+  roles: ['user']
+
 })
 
 const { fetch: refreshSession } = useUserSession()

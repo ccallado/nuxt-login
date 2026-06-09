@@ -7,7 +7,8 @@ const fileRef = ref<HTMLInputElement>()
 
 definePageMeta({
   middleware: ['authenticated'],
-  layout: 'dashboard-layout'
+  layout: 'dashboard-layout',
+  roles: ['user']
 })
 
 // Nos traemos la sesión del usuario
@@ -23,7 +24,8 @@ const profileState = reactive<Partial<ProfileSchemaType>>({
   email: userDB?.value?.email || '',
   username: userDB?.value?.name || '',
   avatar: userDB?.value?.avatar || '',
-  bio: userDB?.value?.bio || ''
+  bio: userDB?.value?.bio || '',
+  role: userDB?.value?.role || ['']
 })
 
 const toast = useToast()
@@ -91,6 +93,15 @@ function onFileClick() {
     :state="profileState"
     @submit="onSubmit"
   >
+    <nav>
+      <NuxtLink to="/">Inicio</NuxtLink>
+
+      <!-- Este enlace solo lo verá el administrador -->
+      <CanAccess :roles="['admin']">
+        <NuxtLink to="/admin/dashboard">Configuración avanzada</NuxtLink>
+      </CanAccess>
+    </nav>
+
     <UPageCard
       title="Profile"
       description="These informations will be displayed publicly."
@@ -190,6 +201,28 @@ function onFileClick() {
           class="w-full"
         />
       </UFormField>
+      <!-- <CanAccess :roles="['admin']"> -->
+      <CanAccess :roles="['admin']">
+        <USeparator />
+        <UFormField
+          name="role"
+          label="Roles"
+          description="Roles que tiene el usuario"
+          class="flex max-sm:flex-col justify-between items-start gap-4"
+        >
+          <UInputTags
+            v-model="profileState.role"
+            placeholder="Escribe y presiona enter..."
+            color="primary"
+            variant="outline"
+            class="w-full"
+          />
+
+          <!-- <p class="mt-2 text-sm text-gray-500">
+            Valores actuales: {{ profileState.role }}
+          </p> -->
+        </UFormField>
+      </CanAccess>
     </UPageCard>
   </UForm>
 </template>

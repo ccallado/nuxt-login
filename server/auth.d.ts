@@ -5,6 +5,7 @@ declare module '#auth-utils' {
     avatar: string
     nombre: string
     bio: string
+    role: 'user' | 'editor' | 'admin'
   }
 
   interface UserSession {

@@ -16,7 +16,8 @@ export default defineOAuthGitHubEventHandler({
 //        password: hashedPassword,
         avatar: '',
         bio: '',
-        nombre: user.email.split('@')[0]
+        nombre: user.email.split('@')[0],
+        role: ['user']
         // createdAt: new Date().getTime()
       }).returning({ id: users.id })
       usuario = nuevoUsuarioCreado
@@ -97,7 +98,8 @@ export default defineOAuthGitHubEventHandler({
         email: usuario.email,
         nombre: usuario.nombre,
         avatar: usuario.avatar,
-        bio: usuario.bio
+        bio: usuario.bio,
+        role: usuario.role
       },
       loggedInAt: Date.now()
     })

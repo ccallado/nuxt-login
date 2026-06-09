@@ -111,11 +111,13 @@ export default defineEventHandler(async (event) => {
       email: user[0].email,
       nombre: user[0].nombre,
       avatar: user[0].avatar,
-      bio: user[0].bio
+      bio: user[0].bio,
+      role: user[0].role
     },
     loggedInAt: Date.now()
   })
 
+  console.log(user[0].role)
   return {
     message: 'Login correcto'
   }
