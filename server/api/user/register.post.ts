@@ -1,6 +1,6 @@
-import { loginSchema } from '@@/shared/zod/login.schema'
+import { loginSchema } from '#shared/zod/login.schema'
 import { eq } from 'drizzle-orm'
-import { users, account } from '../../db/schema'
+import { users, account } from '#server/db/schema'
 import bcrypt from 'bcryptjs'
 // import { email } from "zod"
 import jwt from 'jsonwebtoken'
@@ -13,7 +13,7 @@ export default eventHandler(async (event) => {
   if (user.length != 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'User already exists'
+      message: 'User already exists'
     })
   }
 
@@ -112,7 +112,7 @@ export default eventHandler(async (event) => {
   } catch (error) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Error de base de datos'
+      message: 'Error de base de datos'
     })
     // console.log(error)
   }

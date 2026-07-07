@@ -4,15 +4,19 @@ import { profileSchema } from '#shared/zod/profile.schema'
 import type { ProfileSchemaType } from '#shared/zod/profile.schema'
 
 const fileRef = ref<HTMLInputElement>()
+const { checkAuthority } = useSAPAuth()
 
-definePageMeta({
-  middleware: ['authenticated'],
-  layout: 'dashboard-layout',
-  roles: ['user']
-})
+// definePageMeta({
+//   middleware: ['authenticated'],
+//   layout: 'dashboard-layout',
+//   roles: ['user'],
+//   autobj: ['F_BKPF_BUK'],
+//   autact: ['01'],
+//   autvar: { BUKRS: '1000' }
+// })
 
 // Nos traemos la sesión del usuario
-const { user, fetch: refreshSession } = useUserSession()
+const { fetch: refreshSession } = useUserSession()
 
 // Pero también podríamos traernos los datos de drizzle
 const { data: userDB } = await useFetch('/api/user/profile', {
@@ -28,6 +32,8 @@ const profileState = reactive<Partial<ProfileSchemaType>>({
   role: userDB?.value?.role || ['']
 })
 
+console.log(checkAuthority('F_BKPF_BUK', '01', { BUKRS: '1000' }))
+
 const toast = useToast()
 async function onSubmit(event: FormSubmitEvent<ProfileSchemaType>) {
   try {
@@ -37,6 +43,7 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchemaType>) {
     })
     await refreshSession()
   } catch (error) {
+    console.error('Error uploading:', error)
     toast.add({
       title: 'Error',
       description: 'Failed to update your settings.',
@@ -64,7 +71,7 @@ async function onFileChange(e: Event) {
 
   profileState.avatar = URL.createObjectURL(file)
 
-  //Enviar al servidor
+  // Enviar al servidor
   const formData = new FormData()
   formData.append('avatar', file)
 
@@ -97,9 +104,12 @@ function onFileClick() {
       <NuxtLink to="/">Inicio</NuxtLink>
 
       <!-- Este enlace solo lo verá el administrador -->
-      <CanAccess :roles="['admin']">
+      <!-- <CanAccess :roles="['admin']"> -->
+      <!-- Verificar si puede CREAR (01) en la SOCIEDAD 1000 -->
+      <div v-if="checkAuthority('F_BKPF_BUK', '01', { BUKRS: '1000' })">
         <NuxtLink to="/admin/dashboard">Configuración avanzada</NuxtLink>
-      </CanAccess>
+      </div>
+      <!-- </CanAccess> -->
     </nav>
 
     <UPageCard
@@ -111,8 +121,8 @@ function onFileClick() {
     >
       <UButton
         form="settings"
-        label="Save changes"
-        color="neutral"
+        label="Grabar cambios"
+        color="primary"
         type="submit"
         class="w-fit lg:ms-auto"
       />
@@ -173,8 +183,8 @@ function onFileClick() {
             size="lg"
           />
           <UButton
-            label="Choose"
-            color="neutral"
+            label="Elegir"
+            color="primary"
             @click="onFileClick"
           />
           <input
@@ -201,8 +211,9 @@ function onFileClick() {
           class="w-full"
         />
       </UFormField>
-      <!-- <CanAccess :roles="['admin']"> -->
-      <CanAccess :roles="['admin']">
+      <!-- Verificar si puede CREAR (01) en la SOCIEDAD 1000 -->
+      <div v-if="checkAuthority('F_BKPF_BUK', '01', { BUKRS: '1000' })">
+        <!-- <CanAccess :roles="['admin']"> -->
         <USeparator />
         <UFormField
           name="role"
@@ -222,7 +233,8 @@ function onFileClick() {
             Valores actuales: {{ profileState.role }}
           </p> -->
         </UFormField>
-      </CanAccess>
+        <!-- </CanAccess> -->
+      </div>
     </UPageCard>
   </UForm>
 </template>

@@ -28,10 +28,12 @@ export default defineEventHandler(async (event) => {
     })
 
     return { success: true, data }
-  } catch (error: any) {
+  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.message || 'Error al procesar el envío de correo.'
+      statusCode: err.statusCode || 500,
+      message: err.message || 'Error al procesar el envío de correo.'
     })
   }
 })

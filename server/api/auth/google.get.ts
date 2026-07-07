@@ -1,10 +1,10 @@
 import { and, eq } from 'drizzle-orm'
-import { users, account } from '../../db/schema'
+import { users, account } from '#server/db/schema'
 import jwt from 'jsonwebtoken'
 
 export default defineOAuthGoogleEventHandler({
   async onSuccess(event, { user }) {
-    console.log({ user })
+    // console.log({ user })
     const usuariosEncontrados = await db.select().from(users).where(eq(users.email, user.email)).limit(1)
     let usuario = usuariosEncontrados[0]
     if (usuariosEncontrados.length === 0) {
@@ -13,7 +13,7 @@ export default defineOAuthGoogleEventHandler({
         name: user.email.split('@')[0],
         email: user.email,
         emailVerified: false,
-//        password: hashedPassword,
+        // password: hashedPassword,
         avatar: '',
         bio: '',
         nombre: user.email.split('@')[0],
@@ -23,7 +23,7 @@ export default defineOAuthGoogleEventHandler({
       usuario = nuevoUsuarioCreado
       // throw createError({
       //   statusCode: 400,
-      //   statusMessage: 'User already exists'
+      //   message: 'User already exists'
       // })
     }
 
@@ -41,7 +41,7 @@ export default defineOAuthGoogleEventHandler({
       newAccount = cuentaCreada
       // throw createError({
       //   statusCode: 400,
-      //   statusMessage: 'User already exists'
+      //   message: 'User already exists'
       // })
     }
     if (!newAccount.emailVerified) {
@@ -60,7 +60,7 @@ export default defineOAuthGoogleEventHandler({
         const url = getRequestURL(event)
         const resetUrl = `${url.origin}/auth/verifica-email?token=${token}`
 
-        const response = await $fetch('/api/send-mail-ethereal', {
+        await $fetch('/api/send-mail-ethereal', {
           method: 'POST',
           body: {
             to: user.email,
@@ -85,21 +85,23 @@ export default defineOAuthGoogleEventHandler({
         })
         throw createError({
           statusCode: 404,
-          statusMessage: 'Verifica el correo'
+          message: 'Verifica el correo'
         })
       } catch (error) {
-        console.log (error)
+        console.error (error)
       }
       return sendRedirect(event, '/register?msg=verification_pending')
     }
     await setUserSession(event, {
       user: {
-        name: usuario.name || email.split('@')[0],
+        id: usuario.id,
+        name: usuario.name || usuario.email.split('@')[0],
         email: usuario.email,
         nombre: usuario.nombre,
         avatar: usuario.avatar,
         bio: usuario.bio,
-        role: usuario.role
+        role: usuario.role,
+        authorizations: []
       },
       loggedInAt: Date.now()
     })

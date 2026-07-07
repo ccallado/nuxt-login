@@ -1,6 +1,6 @@
 import { forgotPasswordSchema } from '#shared/zod/forgot-password.schema'
 import jwt from 'jsonwebtoken'
-import { users } from '../../db/schema'
+import { users } from '#server/db/schema'
 import { eq } from 'drizzle-orm'
 // import { messages } from '@electric-sql/pglite'
 // import { clearNuxtData } from 'nuxt/app'
@@ -53,7 +53,7 @@ export default eventHandler(async (event) => {
     //     </p>
     //   </div>`
     // })
-    const response = await $fetch('/api/send-mail-ethereal', {
+    await $fetch('/api/send-mail-ethereal', {
       method: 'POST',
       body: {
         to: email,
@@ -77,7 +77,8 @@ export default eventHandler(async (event) => {
       }
     })
 
-    return { message: 'If this email exists, you will receive a reset link.'}
+    return { message: 'If this email exists, you will receive a reset link.' }
   } catch (error) {
+    console.error(error)
   }
 })

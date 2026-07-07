@@ -1,7 +1,7 @@
 import z from 'zod'
 import jwt from 'jsonwebtoken'
 import { eq } from 'drizzle-orm'
-import { users } from '../../db/schema'
+import { users } from '#server/db/schema'
 import { account } from 'hub:db:schema'
 
 export default defineEventHandler(async (event) => {
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     if (user.length === 0) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'No existe el usuario'
+        message: 'No existe el usuario'
       })
     }
 
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid or expired token'
+      message: 'Invalid or expired token'
     })
   }
 })

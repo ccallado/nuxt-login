@@ -1,8 +1,16 @@
 <script setup lang="ts">
+// definePageMeta({
+//   middleware: ['authenticated'],
+//   layout: 'dashboard-layout',
+//   roles: ['user'] // Solo los administradores pueden entrar aquí
+// })
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
-  roles: ['user'] // Solo los administradores pueden entrar aquí
+  // roles: ['user'],
+  autobj: ['F_BKPF_BUK'],
+  autact: ['01'],
+  autvar: { BUKRS: ['1000'] }
 })
 
 const { user, clear: clearSession } = useUserSession()

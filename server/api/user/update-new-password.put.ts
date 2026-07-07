@@ -1,6 +1,6 @@
 import { newpasswordSchema } from '#shared/zod/new-password.schema'
 import { eq } from 'drizzle-orm'
-import { users } from '../../db/schema'
+import { users } from '#server/db/schema'
 import bcrypt from 'bcryptjs'
 
 export default eventHandler(async (event) => {
@@ -10,7 +10,7 @@ export default eventHandler(async (event) => {
   if (user.length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'No existe el usuario'
+      message: 'No existe el usuario'
     })
   }
 

@@ -6,6 +6,7 @@ declare module '#auth-utils' {
     avatar: string
     bio: string
     role: Array
+    authorizations: []
   }
 
   interface UserSession {

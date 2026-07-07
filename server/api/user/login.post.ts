@@ -1,22 +1,25 @@
 import { loginSchema } from '#shared/zod/login.schema'
 import { eq } from 'drizzle-orm'
-import { users } from '../../db/schema'
+import { users } from '#server/db/schema'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { actualizaSession } from '~~/server/utils/actualiza-session'
 
 export default defineEventHandler(async (event) => {
   const { email, password } = await readValidatedBody(event, loginSchema.parse)
 
-  const user = await db.select().from(users).where(eq(users.email, email)).limit(1)
+  const userList = await db.select().from(users).where(eq(users.email, email)).limit(1)
+
+  const user = userList[0]
 
   if (user.length === 0) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'No existe el usuario'
+      message: 'No existe el usuario'
     })
   }
 
-  if (!user[0].emailVerified) {
+  if (!user.emailVerified) {
     // Enviar correo electrónico de verificación
     const config = useRuntimeConfig()
 
@@ -59,7 +62,7 @@ export default defineEventHandler(async (event) => {
       //     </p>
       //   </div>`
       // })
-      const response = await $fetch('/api/send-mail-ethereal', {
+      await $fetch('/api/send-mail-ethereal', {
         method: 'POST',
         body: {
           to: email,
@@ -85,39 +88,100 @@ export default defineEventHandler(async (event) => {
 
       throw createError({
         statusCode: 401,
-        statusMessage: 'Email no verificado, mandado correo para verificar'
+        message: 'Email no verificado, mandado correo para verificar'
       })
     } catch (error) {
-      // console.log(error)
+      // 3. OPTIMIZACIÓN: Si el error capturado es el 401 que acabas de lanzar arriba, vuelve a lanzarlo sin mutarlo
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (error && (error as any).statusCode === 401) throw error
+
       throw createError({
-        statusCode: 401,
-        statusMessage: 'Email no verificado, mandado correo para verificar'
+        statusCode: 500, // Cambiado a 500 porque el fallo real aquí es del servicio de correo
+        message: 'Error al enviar el correo de verificación'
       })
     }
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user[0].password)
+  const isPasswordValid = await bcrypt.compare(password, user.password)
 
   if (!isPasswordValid) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Invalid password'
+      message: 'Invalid password'
     })
   }
 
+  // 7. Guardar el usuario con sus permisos ya resueltos en la sesión
   await setUserSession(event, {
     user: {
-      name: user[0].name || email.split('@')[0],
-      email: user[0].email,
-      nombre: user[0].nombre,
-      avatar: user[0].avatar,
-      bio: user[0].bio,
-      role: user[0].role
+      id: user.id,
+      name: user.name || email.split('@')[0],
+      email: user.email,
+      nombre: user.nombre,
+      avatar: user.avatar,
+      bio: user.bio,
+      role: user.role,
+      authorizations: [] // 👈 Ya expandidos y listos para usar
     },
     loggedInAt: Date.now()
   })
 
-  console.log(user[0].role)
+  // console.log({ antes: event })
+  await actualizaSession(event)
+  // // 1. Obtener los Roles Maestros asignados al usuario y sus objetos internos
+  // const userRolesData = await db
+  //   .select({ authorizations: masterRoles.authorizations })
+  //   .from(usersToRoles)
+  //   .innerJoin(masterRoles, eq(usersToRoles.roleName, masterRoles.name))
+  //   .where(eq(usersToRoles.userId, user.id))
+
+  // console.log({ basededatos: userRolesData })
+  // // 2. Aplanar y fusionar los objetos de autorización (Evitar duplicados)
+  // const flattenedAuths: SAPAuthorization[] = []
+
+  // for (const row of userRolesData) {
+  //   // CORRECCIÓN CLAVE: Si es un string, lo parseamos a JSON. Si ya es objeto, lo usamos directamente.
+  //   const authorizations = typeof row.authorizations === 'string'
+  //     ? JSON.parse(row.authorizations)
+  //     : (row.authorizations || [])
+
+  //   // Ahora 'authorizations' es un array real y podemos iterar sobre sus objetos correctamente
+  //   for (const authObj of authorizations) {
+  //     if (!authObj || !authObj.object) continue
+
+  //     const existing = flattenedAuths.find(a => a.object === authObj.object)
+
+  //     if (existing) {
+  //       // Si el objeto ya existe, combinamos los permisos (Regla de acumulación de SAP)
+  //       Object.keys(authObj.fields || {}).forEach(field => {
+  //         const combined = [...(existing.fields[field] || []), ...(authObj.fields[field] || [])]
+  //         existing.fields[field] = [...new Set(combined)] // Eliminar duplicados
+  //       })
+  //     } else {
+  //       // Copia profunda limpia para romper referencias a la base de datos
+  //       flattenedAuths.push(JSON.parse(JSON.stringify(authObj)))
+  //     }
+  //   }
+  // }
+
+  // // Comprobación final en consola
+  // console.log('RESULTADO FINAL PROCESADO:', flattenedAuths)
+
+  // // 7. Guardar el usuario con sus permisos ya resueltos en la sesión
+  // await setUserSession(event, {
+  //   user: {
+  //     name: user.name || email.split('@')[0],
+  //     email: user.email,
+  //     nombre: user.nombre,
+  //     avatar: user.avatar,
+  //     bio: user.bio,
+  //     role: user.role,
+  //     authorizations: flattenedAuths // 👈 Ya expandidos y listos para usar
+  //   },
+  //   loggedInAt: Date.now()
+  // })
+
+  // console.log({ autorización: user.authorizations })
   return {
     message: 'Login correcto'
   }

@@ -8,7 +8,7 @@ defineProps<{
 const teams = ref([{
   label: 'Altare SP',
   avatar: {
-    src: 'https://altaresp.es/wp-content/uploads/2024/12/altare-naranaja.png',
+    src: 'https://altaresp.es/firmas/BolaNaranja.gif',
     alt: 'Altare SP'
   }
 }, {

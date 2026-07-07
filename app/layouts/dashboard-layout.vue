@@ -60,6 +60,12 @@ const links = [[{
       open.value = false
     }
   }, {
+    label: 'Roles',
+    to: '/admin/settings/roles',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
     label: 'Security',
     to: '/admin/settings/security',
     onSelect: () => {

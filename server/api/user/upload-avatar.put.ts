@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { z } from 'zod'
-import { users } from '../../db/schema'
+import { users } from '#server/db/schema'
 import { eq } from 'drizzle-orm'
 
 
@@ -25,7 +25,7 @@ export default eventHandler(async (event) => {
   if (!session?.user?.email) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Unauthorized'
+      message: 'Unauthorized'
     })
   }
 

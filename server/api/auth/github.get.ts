@@ -1,35 +1,53 @@
 import { and, eq } from 'drizzle-orm'
-import { users, account } from '../../db/schema'
+import { users, account } from '#server/db/schema'
 import jwt from 'jsonwebtoken'
 
 export default defineOAuthGitHubEventHandler({
   async onSuccess(event, { user }) {
-    console.log({ user })
-    const usuariosEncontrados = await db.select().from(users).where(eq(users.email, user.email)).limit(1)
+    // console.log({ user })
+    const usuariosEncontrados = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, user.email ?? ''))
+      .limit(1)
     let usuario = usuariosEncontrados[0]
+    // 1. Validamos y aseguramos que el email exista y sea un string real
+    const userEmail = user?.email
+
+    if (!userEmail) {
+      throw createError({
+        statusCode: 400,
+        message: 'No se puede registrar al usuario porque el correo electrónico es nulo o inválido.'
+      })
+    }
+
     if (usuariosEncontrados.length === 0) {
       // 2. Alta de usuario tabla principal
       const [nuevoUsuarioCreado] = await db.insert(users).values({
-        name: user.email.split('@')[0],
-        email: user.email,
+        name: userEmail.split('@')[0],
+        email: userEmail,
         emailVerified: false,
-//        password: hashedPassword,
+        // password: hashedPassword,
         avatar: '',
         bio: '',
-        nombre: user.email.split('@')[0],
+        nombre: userEmail.split('@')[0],
         role: ['user']
         // createdAt: new Date().getTime()
       }).returning({ id: users.id })
       usuario = nuevoUsuarioCreado
       // throw createError({
       //   statusCode: 400,
-      //   statusMessage: 'User already exists'
+      //   message: 'User already exists'
       // })
     }
 
-    const accountuser = await db.select().from(account).where(and(
-      eq(account.providerAccountId, user.email),
-      eq(account.provider, 'github'))).limit(1)
+    const accountuser = await db
+      .select()
+      .from(account)
+      .where(and(
+        eq(account.providerAccountId, user.email ?? ''),
+        eq(account.provider, 'github')))
+      .limit(1)
     let newAccount = accountuser[0] || null
     if (accountuser.length === 0) {
       const [cuentaCreada] = await db.insert(account).values({
@@ -41,7 +59,7 @@ export default defineOAuthGitHubEventHandler({
       newAccount = cuentaCreada
       // throw createError({
       //   statusCode: 400,
-      //   statusMessage: 'User already exists'
+      //   message: 'User already exists'
       // })
     }
     if (!newAccount.emailVerified) {
@@ -60,7 +78,7 @@ export default defineOAuthGitHubEventHandler({
         const url = getRequestURL(event)
         const resetUrl = `${url.origin}/auth/verifica-email?token=${token}`
 
-        const response = await $fetch('/api/send-mail-ethereal', {
+        await $fetch('/api/send-mail-ethereal', {
           method: 'POST',
           body: {
             to: user.email,
@@ -85,21 +103,23 @@ export default defineOAuthGitHubEventHandler({
         })
         throw createError({
           statusCode: 404,
-          statusMessage: 'Verifica el correo'
+          message: 'Verifica el correo'
         })
       } catch (error) {
-        console.log (error)
+        console.error(error)
       }
       return sendRedirect(event, '/register?msg=verification_pending')
     }
     await setUserSession(event, {
       user: {
-        name: usuario.name || email.split('@')[0],
+        id: usuario.id,
+        name: usuario.name || usuario.email.split('@')[0],
         email: usuario.email,
         nombre: usuario.nombre,
         avatar: usuario.avatar,
         bio: usuario.bio,
-        role: usuario.role
+        role: usuario.role,
+        authorizations: []
       },
       loggedInAt: Date.now()
     })

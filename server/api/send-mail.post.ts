@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.message || 'Error al procesar el envío de correo.'
+      message: error.message || 'Error al procesar el envío de correo.'
     })
   }
 })

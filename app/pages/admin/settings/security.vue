@@ -7,7 +7,9 @@ import type { NuxtError } from '#app'
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
-  roles: ['user']
+  autobj: ['F_BKPF_BUK'],
+  autact: ['02'],
+  autvar: { BUKRS: '1000' }
 })
 
 const password = reactive<Partial<PasswordSchemaType>>({

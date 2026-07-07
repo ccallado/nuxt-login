@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { users } from '../../db/schema'
-import { profileSchema } from '~~/shared/zod/profile.schema'
+import { users } from '#server/db/schema'
+import { profileSchema } from '#shared/zod/profile.schema'
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   if (!session?.user?.email) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Unauthorized'
+      message: 'Unauthorized'
     })
   }
 
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   if (user.length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'No existe el usuario'
+      message: 'No existe el usuario'
     })
   }
 

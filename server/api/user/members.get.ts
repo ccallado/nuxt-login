@@ -1,5 +1,5 @@
-import { eq } from 'drizzle-orm'
 import { users } from '#server/db/schema'
+import { asc } from 'drizzle-orm'
 
 export default eventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -11,21 +11,20 @@ export default eventHandler(async (event) => {
     })
   }
 
-  const user = await db.select().from(users).where(eq(users.email, session.user.email)).limit(1)
+  const userss = await db.select().from(users).orderBy(asc(users.nombre))
 
-  if (user.length === 0) {
+  if (userss.length === 0) {
     throw createError({
       statusCode: 400,
       message: 'No existe el usuario'
     })
   }
 
-  return {
-    name: user[0].name,
-    email: user[0].email,
-    nombre: user[0].nombre,
-    avatar: user[0].avatar,
-    bio: user[0].bio,
-    role: user[0].role
-  }
+  // console.log({ userss })
+  return userss.map(user => ({
+    name: user.name,
+    username: user.nombre,
+    role: user.role,
+    avatar: user.avatar
+  }))
 })

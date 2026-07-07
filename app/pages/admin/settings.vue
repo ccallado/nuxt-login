@@ -1,10 +1,17 @@
 <script lang="ts" setup>
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+// definePageMeta({
+//   middleware: ['authenticated'],
+//   layout: 'dashboard-layout',
+//   roles: ['admin']
+// })
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
-  roles: ['admin']
+  autobj: ['F_BKPF_BUK'],
+  autact: ['01'],
+  autvar: { BUKRS: '1000' }
 })
 
 const links = [[{
@@ -13,7 +20,7 @@ const links = [[{
   to: '/admin/settings',
   exact: true
 }, {
-  label: 'Members',
+  label: 'Usuarios',
   icon: 'i-lucide-users',
   to: '/admin/settings/members'
 }, {
@@ -21,11 +28,15 @@ const links = [[{
   icon: 'i-lucide-bell',
   to: '/admin/settings/notifications'
 }, {
-  label: 'Security',
+  label: 'Roles',
+  icon: 'lucide:user-round-check',
+  to: '/admin/settings/roles'
+}, {
+  label: 'Cambio de Contraseña',
   icon: 'i-lucide-shield',
   to: '/admin/settings/security'
 }], [{
-  label: 'Documentation',
+  label: 'Documentación',
   icon: 'i-lucide-book-open',
   to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
   target: '_blank'
@@ -38,7 +49,7 @@ const links = [[{
     :ui="{ body: 'lg:py-12' }"
   >
     <template #header>
-      <UDashboardNavbar title="Profile">
+      <UDashboardNavbar title="Perfil">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -55,7 +66,7 @@ const links = [[{
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full lg:max-w-2xl mx-auto">
+      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full lg:max-w-7xl mx-auto">
         <NuxtPage />
       </div>
     </template>

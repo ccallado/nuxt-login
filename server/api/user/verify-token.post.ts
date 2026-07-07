@@ -18,7 +18,7 @@ export default eventHandler(async (event) => {
   } catch (error) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid or expired token'
+      message: 'Invalid or expired token'
     })
   }
 })

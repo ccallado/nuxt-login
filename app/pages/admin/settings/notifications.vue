@@ -1,9 +1,17 @@
 <script lang="ts" setup>
-definePageMeta({
-  middleware: ['authenticated'],
-  layout: 'dashboard-layout',
-  roles: ['user']
-})
+// definePageMeta({
+//   middleware: ['authenticated'],
+//   layout: 'dashboard-layout',
+//   roles: ['user']
+// })
+// definePageMeta({
+//   middleware: ['authenticated'],
+//   layout: 'dashboard-layout',
+//   roles: ['user'],
+//   autobj: ['F_BKPF_BUK'],
+//   autact: ['01'],
+//   autvar: { BUKRS: '1000' }
+// })
 </script>
 
 <template>
