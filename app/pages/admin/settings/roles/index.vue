@@ -1,56 +1,55 @@
 <script setup lang="ts">
+import { ref, reactive, computed } from 'vue'
 import type { NuxtError } from '#app'
 
-// import { ref, reactive } from 'vue'
 const { refreshSession } = useSAPAuth()
 
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
-  roles: ['user']
+  autobj: ['ADMIN'],
+  autact: ['*'],
+  autvar: { ROLES: '*' }
 })
 
 const toast = useToast()
 
-// 1. Cargar datos de forma reactiva desde el backend
-const { data, refresh } = await useFetch('/api/admin/roles')
+// 1. Cargar datos de forma unificada desde tu Endpoint centralizado
+const { data, refresh } = await useFetch<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  roles: Array<{ name: string, description: string, authorizations: any[] }>
+  users: Array<{ id: number, email: string, roles: string[] }>
+}>('/api/admin/roles')
 
-// console.log(data?.value.users)
-
-// Estructura de pestañas para Nuxt UI
+// Estructura de pestañas adaptada a Nuxt UI v3
 const tabs = [
   { slot: 'table', label: 'Matriz de Roles Maestros', icon: 'i-heroicons-table-cells' },
   { slot: 'assign', label: 'Asignación a Usuarios (SU01)', icon: 'i-heroicons-user-group' }
 ]
 
-// 2. Configuración de la Tabla de Roles Maestros
-// const columns = [
-//   { id: 'name', key: 'name', label: 'Código Técnico (SAP)' },
-//   { id: 'description', key: 'description', label: 'Descripción del Perfil' },
-//   { id: 'objects_count', key: 'objects_count', label: 'Objetos Incluidos' },
-//   { id: 'actions', key: 'actions', label: 'Acción' } // 👈 NUEVA COLUMNA
-// ]
+// 2. Configuración de columnas utilizando la especificación de TanStack Table para Nuxt UI v3
 const columns = [
-  { accessorKey: 'name', header: 'Código Técnico (SAP)' },
+  { accessorKey: 'name', header: 'Código Técnico (SAP)', class: 'font-mono font-bold' },
   { accessorKey: 'description', header: 'Descripción del Perfil' },
   { accessorKey: 'objects_count', header: 'Objetos Incluidos' },
-  { accessorKey: 'actions', header: 'Acción' }
+  { accessorKey: 'actions', header: 'Acción', class: 'text-right' }
 ]
 
-// 3. Estado para la asignación interactiva de usuarios
+// 3. Estado de asignación interactiva
 const assignmentState = reactive({
   selectedUser: null as { id: number, email: string, roles: string[] } | null,
   selectedRoles: [] as string[]
 })
 const isSavingAssignment = ref(false)
 
-// Cargar los roles del usuario seleccionado al formulario flotante
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectUserForEdit = (user: any) => {
+// Cargar los datos del usuario en el formulario lateral
+const selectUserForEdit = (user: { id: number, email: string, roles: string[] }) => {
   assignmentState.selectedUser = user
+  // Hacemos una copia limpia para romper referencias reactivas directas mientras edita
   assignmentState.selectedRoles = [...user.roles]
 }
 
+// Envío de la asignación del perfil SU01 al servidor
 const saveUserRoles = async () => {
   if (!assignmentState.selectedUser) return
   isSavingAssignment.value = true
@@ -63,277 +62,263 @@ const saveUserRoles = async () => {
         roles: assignmentState.selectedRoles
       }
     })
+
     toast.add({
       title: 'Success',
-      description: 'Autorizaciones de usuario actualizadas con éxito.',
+      description: `Autorizaciones para ${assignmentState.selectedUser.email} actualizadas.`,
       icon: 'i-lucide-check',
       color: 'success'
     })
-    // alert('Autorizaciones de usuario actualizadas con éxito.')
+
     assignmentState.selectedUser = null
-    await refresh() // Refrescar listas con los nuevos cambios
-    await refreshSession()
+    await refresh() // Actualiza inmediatamente las listas en pantalla
+    await refreshSession() // Fuerza al composable local a recargar los permisos si te auto-asignaste algo
   } catch (error) {
     const err = error as NuxtError
     toast.add({
       title: 'Error',
-      description: err.statusText,
+      description: err.statusText || 'Error al guardar asignación.',
       icon: 'i-lucide-x',
       color: 'error'
     })
-    // alert('Error al guardar las asignaciones.')
   } finally {
     isSavingAssignment.value = false
   }
 }
 
-// Agrega esto en tu <script setup>
+// Mapeo computado para alimentar el USelectMenu dinámicamente
 const rolesItems = computed(() => {
   if (!data.value?.roles) return []
-
-  // Convertimos cada rol en el formato { label: 'Z_ADMIN', id: 'Z_ADMIN' }
-  return data.value.roles.map((r: { name: string }) => ({
+  return data.value.roles.map(r => ({
     label: r.name,
     id: r.name
   }))
 })
+
+// 1. Tu llamada original useFetch se mantiene igual
+// const { data: rolesFetchResponse, refresh } = await useFetch<any>('/api/admin/roles')
+
+// 2. 👑 NUEVO: Creamos una lista computada que calcula el conteo de forma nativa
+const rolesConConteo = computed(() => {
+  if (!data.value?.roles) return []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.value.roles.map((rol: any) => {
+    // Si authorizations viene como un string JSON desde Postgres, lo parseamos.
+    // Si ya viene como un array de objetos, simplemente medimos su longitud (.length).
+    let listaAuths = []
+    if (typeof rol.authorizations === 'string') {
+      try {
+        listaAuths = JSON.parse(rol.authorizations)
+      } catch (e) {
+        console.log(e)
+        listaAuths = []
+      }
+    } else if (Array.isArray(rol.authorizations)) {
+      listaAuths = rol.authorizations
+    }
+
+    return {
+      ...rol,
+      // 👑 Inyectamos la clave exacta que espera la columna 'accessorKey: objects_count'
+      objects_count: listaAuths.length
+    }
+  })
+})
 </script>
 
 <template>
-  <UPageCard
-    title="Password"
-    description="Confirm your current password before setting a new one."
-    variant="subtle"
-  >
-    <!-- <UContainer class="py-10 max-w-6xl"> -->
-    <div class="mb-6 flex justify-between items-center">
+  <div class="space-y-6">
+    <!-- Encabezado de la página -->
+    <div class="flex justify-between items-center">
       <div>
-        <h1
-          class="text-2xl font-black text-gray-900 dark:text-white"
-        >
-          Gobernanza de Accesos de Seguridad
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+          Gestión de Autorizaciones SAP
         </h1>
-        <p
-          class="text-sm text-gray-500"
-        >
-          Administra la asignación masiva y el mapeo de transacciones corporativas
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Administración de matrices técnicas y asignación directa de perfiles a usuarios del sistema.
         </p>
       </div>
-      <UButton
-        to="/admin/settings/create-role"
-        color="primary"
-        icon="i-heroicons-plus-circle"
-      >
-        Crear Nuevo Rol Maestro
-      </UButton>
     </div>
 
-    <!-- Navegación por pestañas -->
+    <!-- Contenedor de Pestañas (Tabs) de Nuxt UI v3 -->
     <UTabs
       :items="tabs"
       class="w-full"
     >
-      <!-- PESTAÑA 1: TABLA GENERAL DE ROLES MAESTROS -->
+      <!-- PESTAÑA 1: MATRIZ DE ROLES MAESTROS -->
       <template #table>
-        <UCard class="mt-4">
+        <div class="mt-4 space-y-4">
+          <div class="flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              Perfiles Técnicos Existentes
+            </h2>
+            <!-- El botón redirige a la creación de un nuevo rol -->
+            <div class="flex items-center gap-2">
+              <UButton
+                to="/admin/settings/sap-objects"
+                color="primary"
+                icon="i-heroicons-pencil"
+                label="Mantener Objetos de Autorización"
+              />
+              <UButton
+                to="/admin/settings/create-role"
+                color="primary"
+                icon="i-heroicons-plus"
+                label="Crear Nuevo Rol Maestro"
+              />
+            </div>
+          </div>
+
+          <!-- Tabla de Nuxt UI v3 usando TanStack Table interno -->
           <UTable
-            :data="data?.roles || []"
+            :data="rolesConConteo"
             :columns="columns"
+            class="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden"
           >
-            <!-- CORRECCIÓN NUXT 4: El slot ahora es #[id]-cell en lugar de #[key]-data -->
-            <template #name-cell="{ row }">
-              <span class="font-mono font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/50 px-2 py-0.5 rounded text-xs border border-primary-200 dark:border-primary-800">
-                {{ row.original.name }} <!-- CORRECCIÓN: TanStack encapsula la fila en 'original' -->
+            <!-- Slot personalizado para contar los objetos de la matriz JSON -->
+            <template #objects_count-cell="{ row }">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300 font-mono">
+                {{ row.original.objects_count }} objetos
               </span>
             </template>
 
-            <!-- CORRECCIÓN NUXT 4: El slot cambia a #objects_count-cell -->
-            <template #objects_count-cell="{ row }">
-              <UBadge
-                size="xs"
-                color="neutral"
-                variant="solid"
-              >
-                <!-- Parseamos el string JSON antes de medir su longitud -->
-                <!-- Forzamos el cast a 'any' para que TypeScript no bloquee la propiedad .length -->
-                {{
-                  typeof row.original.authorizations === 'string'
-                    ? (JSON.parse(row.original.authorizations) as any[]).length
-                    : (row.original.authorizations as any[])?.length || 0
-                }} Objetos
-                <!-- {{ row.original.authorizations?.length || 0 }} Objetos -->
-              </UBadge>
-            </template>
-
-            <!-- NUEVO SLOT PARA LA COLUMNA DE ACCIONES -->
+            <!-- Slot para el botón de acción (Modificar) -->
             <template #actions-cell="{ row }">
               <UButton
                 :to="`/admin/settings/roles/${row.original.name}`"
-                color="neutral"
+                color="primary"
                 variant="ghost"
                 icon="i-heroicons-pencil-square"
-                size="xs"
-                label="Editar Matriz"
+                size="sm"
+                label="Modificar"
               />
             </template>
-
-            <!-- Opcional: Renderizador por defecto si la columna description no requiere HTML personalizado -->
           </UTable>
-        </UCard>
+        </div>
       </template>
 
-      <!-- PESTAÑA 2: ASIGNACIÓN A USUARIOS -->
+      <!-- PESTAÑA 2: ASIGNACIÓN A USUARIOS (SU01) -->
       <template #assign>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-          <!-- Lista Izquierda: Usuarios del Sistema -->
-          <UCard class="md:col-span-2">
-            <template #header>
-              <h3
-                class="font-semibold text-sm"
-              >
-                Directorio Global de Usuarios
-              </h3>
-            </template>
+        <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Lista de Usuarios Disponibles -->
+          <div class="lg:col-span-2 space-y-4">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              Maestro de Usuarios (SU01)
+            </h2>
 
-            <div class="divide-y divide-gray-100 dark:divide-gray-800">
+            <div class="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
               <div
-                v-for="user in data?.users"
+                v-for="user in data?.users || []"
                 :key="user.id"
-                class="p-3 flex
-                justify-between
-                items-center
-                hover:bg-gray-50
-                dark:hover:bg-gray-800/30
-                transition-colors
-                rounded-lg"
+                class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
               >
-                <div class="flex items-center gap-3">
-                  <UAvatar
-                    :src="user.avatar"
-                    :alt="user.email.toUpperCase()"
-                    size="md"
-                  />
-                  <div>
-                    <p
-                      class="font-medium
-                      text-sm
-                      text-gray-900
-                      dark:text-white"
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white">
+                    {{ user.email }}
+                  </h4>
+                  <!-- Visualizador de los roles técnicos asignados actualmente -->
+                  <div class="flex flex-wrap gap-1.5 mt-2">
+                    <span
+                      v-if="!user.roles || user.roles.length === 0"
+                      class="text-xs text-gray-400 italic"
                     >
-                      {{ user.email }}
-                    </p>
-                    <div class="flex flex-wrap gap-1 mt-1">
-                      <span
-                        v-if="user.roles.length === 0"
-                        class="text-xs
-                        text-gray-400
-                        italic"
-                      >
-                        Sin roles asignados
-                      </span>
-                      <span
-                        v-for="r in user.roles"
-                        :key="r"
-                        class="text-[10px]
-                        bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5
-                        rounded
-                        font-mono
-                        text-gray-600
-                        dark:text-gray-300"
-                      >
-                        {{ r }}
-                      </span>
-                    </div>
+                      Sin roles asignados
+                    </span>
+                    <span
+                      v-for="role in user.roles"
+                      :key="role"
+                      class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-mono text-xs rounded"
+                    >
+                      {{ role }}
+                    </span>
                   </div>
                 </div>
+
                 <UButton
                   color="neutral"
-                  variant="ghost"
-                  icon="i-heroicons-pencil-square"
-                  label="Modificar"
-                  size="xs"
+                  variant="subtle"
+                  icon="i-heroicons-user-plus"
+                  size="sm"
+                  label="Asignar Roles"
                   @click="selectUserForEdit(user)"
                 />
               </div>
             </div>
-          </UCard>
+          </div>
 
-          <!-- Panel Derecho: Formulario Reactivo de Asignación -->
-          <UCard
-            v-if="assignmentState.selectedUser"
-            class="h-fit sticky top-6"
-          >
-            <template #header>
-              <div class="flex justify-between items-center">
-                <h3
-                  class="font-bold text-sm text-gray-900 dark:text-white"
-                >
-                  Modificar Autorizaciones
-                </h3>
-                <UButton
-                  color="secondary"
-                  variant="ghost"
-                  icon="i-heroicons-x-mark"
-                  size="xs"
-                  @click="assignmentState.selectedUser = null"
-                />
-              </div>
-            </template>
-
-            <div class="space-y-4">
+          <!-- Panel Lateral Flotante / Formulario de Asignación Activa -->
+          <div class="lg:col-span-1">
+            <div
+              v-if="assignmentState.selectedUser"
+              class="sticky top-6 p-5 border border-primary-200 dark:border-primary-900/50 bg-primary-50/30 dark:bg-primary-950/10 rounded-2xl space-y-4"
+            >
               <div>
-                <span class="text-xs text-gray-400 block mb-1">Usuario Destino</span>
-                <p class="font-bold text-sm text-primary border-b border-gray-100 dark:border-gray-800 pb-2">
+                <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <UIcon
+                    name="i-heroicons-shield-check"
+                    class="text-primary"
+                  />
+                  Modificar Usuario
+                </h3>
+                <p class="text-xs text-gray-500 font-mono mt-1 break-all">
                   {{ assignmentState.selectedUser.email }}
                 </p>
               </div>
 
-              <!-- Selector Múltiple Complejo de Nuxt UI -->
+              <!-- Selector múltiple nativo de Nuxt UI v3 -->
               <UFormField
-                label="Asignar Roles Maestros Relacionados"
-                name="roles-select"
+                label="Selecciona los Roles Maestros"
+                required
               >
                 <USelectMenu
                   v-model="assignmentState.selectedRoles"
                   :items="rolesItems"
-                  multiple
+                  value-attribute="id"
                   value-key="id"
-                  placeholder="Selecciona uno o varios roles..."
+                  multiple
+                  placeholder="Escoge uno o más perfiles..."
+                  class="w-full"
                   searchable
                 />
               </UFormField>
 
-              <div class="pt-2">
+              <!-- Botones de Control de la Asignación -->
+              <div class="flex gap-2 pt-2">
                 <UButton
-                  block
                   color="primary"
-                  icon="i-heroicons-shield-check"
+                  class="flex-1 justify-center"
+                  icon="i-heroicons-document-check"
                   :loading="isSavingAssignment"
-                  label="Ejecutar Cambios"
+                  label="Guardar SU01"
                   @click="saveUserRoles"
+                />
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  label="Cancelar"
+                  @click="assignmentState.selectedUser = null;"
                 />
               </div>
             </div>
-          </UCard>
 
-          <!-- Estado Vacío del Formulario Derecho -->
-          <UCard
-            v-else
-            class="flex flex-col items-center justify-center text-center p-10 bg-gray-50/50 dark:bg-gray-800/10 border border-dashed border-gray-200 dark:border-gray-800"
-          >
-            <UIcon
-              name="i-heroicons-user-plus"
-              class="w-8 h-8 text-gray-300 dark:text-gray-700 mb-2"
-            />
-            <p
-              class="text-xs text-gray-400"
+            <!-- Placeholder si no hay ningún usuario seleccionado en el panel lateral -->
+            <div
+              v-else
+              class="p-8 border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl text-center text-gray-400 dark:text-gray-500"
             >
-              Selecciona un usuario del directorio para alterar sus perfiles de seguridad activos.
-            </p>
-          </UCard>
+              <UIcon
+                name="i-heroicons-user"
+                class="w-8 h-8 mx-auto mb-2 opacity-50"
+              />
+              <p
+                class="text-xs"
+              >
+                Selecciona un usuario de la lista para gestionar sus autorizaciones técnicas.
+              </p>
+            </div>
+          </div>
         </div>
       </template>
     </UTabs>
-  <!-- </UContainer> -->
-  </UPageCard>
+  </div>
 </template>

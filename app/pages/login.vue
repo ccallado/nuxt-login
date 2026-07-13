@@ -20,19 +20,19 @@ const fields: AuthFormField[] = [{
   name: 'email',
   type: 'email',
   label: 'Email',
-  placeholder: 'Enter your email',
+  placeholder: 'Introduce tu email',
   required: true,
   defaultValue: 'ccallado@hotmail.com'
 }, {
   name: 'password',
-  label: 'Password',
+  label: 'Contraseña',
   type: 'password',
-  placeholder: 'Enter your password',
+  placeholder: 'Introduce tu contraseña',
   required: true,
   defaultValue: '12341234'
 }, {
   name: 'remember',
-  label: 'Remember me',
+  label: 'Recuérdame',
   type: 'checkbox'
 }]
 
@@ -41,14 +41,14 @@ const providers = [{
   icon: 'i-simple-icons-google',
   onClick: () => {
     window.location.href = '/api/auth/google'
-    toast.add({ title: 'Google', description: 'Login with Google' })
+    toast.add({ title: 'Google', description: 'Logeate con Google' })
   }
 }, {
   label: 'GitHub',
   icon: 'i-simple-icons-github',
   onClick: () => {
     window.location.href = '/api/auth/github'
-    toast.add({ title: 'GitHub', description: 'Login with GitHub' })
+    toast.add({ title: 'GitHub', description: 'Logeate con GitHub' })
   }
   // onClick: async () => {
   //   await navigateTo('/api/auth/github', { external: true }
@@ -69,13 +69,13 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
       }
     })
     await refreshSession()
-    console.log(response)
+    // console.log(response)
     toast.add({ title: 'Success', description: 'Login successful' })
     await refreshSession()
     await navigateTo('/admin/dashboard')
   } catch (error) {
     const err = error as NuxtError
-    console.log(error)
+    // console.log(error)
     toast.add({ title: 'Error', description: err.statusText, color: 'error' })
   } finally {
     loading.value = false
@@ -91,17 +91,17 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
         :fields="fields"
         :providers="providers"
         :loading="loading"
-        title="Welcome back!"
+        title="¡Bienvenido de nuevo!"
         icon="i-lucide-lock"
         @submit="onSubmit"
       >
         <template #description>
-          Don't have an account?
+          ¿No tienes una cuenta?
           <ULink
             to="/register"
             class="text-primary font-medium"
           >
-            Sign up
+            Regístrate
           </ULink>.
         </template>
         <template #password-hint>
@@ -110,7 +110,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
             class="text-primary
             font-medium"
             tabindex="-1"
-          >Forgot password?
+          >¿Olvidaste la contraseña?
           </ULink>
         </template>
         <template #validation>
@@ -122,12 +122,12 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaType>) {
           />
         </template>
         <template #footer>
-          By signing in, you agree to our
+          Al iniciar sesión, aceptas nuestros términos y condiciones.
           <ULink
             to="#"
             class="text-primary
             font-medium"
-          >Terms of Service</ULink>.
+          >Condiciones del servicio</ULink>.
         </template>
       </UAuthForm>
     </UPageCard>

@@ -1,10 +1,14 @@
-import { sql } from 'drizzle-orm'
-import { pgTable, text, serial, timestamp, integer, unique, boolean, primaryKey, uuid } from 'drizzle-orm/pg-core'
+/* eslint-disable @stylistic/no-multi-spaces */
+// import { sql } from 'drizzle-orm'
+import {
+  pgTable, text, serial, timestamp, integer, unique, boolean, primaryKey, uuid, varchar, jsonb
+} from 'drizzle-orm/pg-core'
 import type { SAPAuthorization } from '#shared/utils/sap-schema'
 
 // Definición de roles válidos
 export const rolesEnum = ['user', 'editor', 'admin'] as const
 
+// 1. Maestro de usuarios
 export const users = pgTable('users', {
   id: serial().primaryKey(),
   name: text().notNull(),
@@ -16,24 +20,41 @@ export const users = pgTable('users', {
   bio: text(),
   createdAt: timestamp().notNull().defaultNow(),
   modifiedAt: timestamp().notNull().defaultNow(),
-  role: text('role', { enum: rolesEnum })
-    .array() // 👈 Transforma el campo en un array nativo (text[])
-    .notNull()
-    .default(sql`ARRAY['user']::text[]`)
+  authUpdatedAt: timestamp('auth_updated_at').defaultNow().notNull()
 })
 
+// 2. Tabla de cuentas de un email (ej: 'google', 'github', 'email')
 export const account = pgTable('account', {
   id: serial().primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),
   provider: text().notNull(), // "github, "google", "email"
   providerAccountId: text().notNull(), // ID del proveedor (GitHub ID, Google ID, etc)
   emailVerified: boolean().default(false).notNull()
-}, (table) => [
+}, table => [
   // Esto asegura que la combinación de provider y providerAccountId sea irrepetible
   unique('unique_prov_provaccount').on(table.provider, table.providerAccountId)
 ])
 
-// 2. Tabla de Roles Maestros (Ej: "Z_CONTADOR_GENERAL", "Z_GESTOR_COMPRAS")
+// 3. Maestro de Objetos SAP (ej: 'F_BKPF_BUK', 'M_MATE_WRK')
+export const sapObjectsMaster = pgTable('sap_objects_master', {
+  objectName: text('object_name').primaryKey(), // Ej: 'F_BKPF_BUK'
+  description: text('description').notNull()
+})
+
+// 4. Definición de campos por cada objeto (Relación 1 a Muchos)
+// Esto define qué campos técnicos específicos pertenecen a cada objeto
+export const sapObjectFields = pgTable('sap_object_fields', {
+  objectName: text('object_name')
+    .notNull()
+    .references(() => sapObjectsMaster.objectName, { onDelete: 'cascade' }),
+  fieldName: text('field_name').notNull(), // Ej: 'ACTVT', 'BUKRS', 'WERKS'
+  description: text('description').notNull()
+}, table => [
+  // Clave primaria compuesta para evitar duplicados del mismo campo en el mismo objeto
+  primaryKey({ columns: [table.objectName, table.fieldName] })
+])
+
+// 5. Tabla de Roles Maestros (Ej: "Z_CONTADOR_GENERAL", "Z_GESTOR_COMPRAS")
 export const masterRoles = pgTable('master_roles', {
   name: text('name').primaryKey(), // El nombre del rol es el identificador único (estilo SAP)
   description: text('description').notNull(),
@@ -43,15 +64,42 @@ export const masterRoles = pgTable('master_roles', {
     .notNull()
 })
 
-// 3. Tabla Intermedia: Relación Muchos a Muchos (Usuario tiene N Roles Maestros)
+// 6. Tabla Intermedia: Relación Muchos a Muchos (Usuario tiene N Roles Maestros)
 export const usersToRoles = pgTable('users_to_roles', {
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   roleName: text('role_name').notNull().references(() => masterRoles.name, { onDelete: 'cascade' })
-}, (table) => ({
-  pk: primaryKey({ columns: [table.userId, table.roleName] }),
+}, table => ({
+  pk: primaryKey({ columns: [table.userId, table.roleName] })
 }))
 
-// Tabla de propiedades
+// 7. Tabla de Sesiones: Controlo a los usuarios que están logados
+export const userSessions = pgTable('user_sessions', {
+  id: text('id').primaryKey(), // UUID único de la sesión de este navegador
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  device: text('device').notNull(), // User-Agent (Chrome, Safari, etc.)
+  ipAddress: text('ip_address').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+})
+
+// 8. Tabla de menu de navegación
+export const navigationMenu = pgTable('navigation_menu', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(), // ID Autoincremental nativo
+  etiqueta: text('etiqueta').notNull(),                             // Título visible (Ej: 'Sesiones')
+  icon: text('icon'),                                         // Icono (Ej: 'i-lucide-settings')
+  direccion: text('direccion'),                                             // Ruta de Nuxt (Ej: '/admin/settings')
+
+  // 🔐 Seguridad SAP integrada por fila
+  objReq: text('obj_req'),                                    // Objeto SAP requerido (Ej: 'ADMIN')
+  actReq: text('act_req'),                                    // Actividad requerida (Ej: '01')
+  varReq: text('var_req'),                                    // Filtro de variables organizacionales
+
+  // 📁 Configuración estructural de Nuxt UI v3
+  parentId: integer('parent_id'),                             // Permite colgar este ítem dentro de un padre
+  isGroupTwo: boolean('is_group_two').default(false).notNull(), // true para mandarlo al bloque de abajo (Feedback/Help)
+  displayOrder: integer('display_order').default(0).notNull() // Orden de aparición visual en la barra lateral
+})
+
+// 10. Tabla de propiedades
 export const propiedades = pgTable('propiedades', {
   // Genera un UUID automático y único en PostgreSQL
   id: uuid('id').defaultRandom().primaryKey(),
@@ -61,9 +109,9 @@ export const propiedades = pgTable('propiedades', {
   planta: text('planta'),
   letra: text('letra'),
   descripcion: text('descripción').notNull(),
-  propietarioId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  propietarioId: integer('propietarioId').notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp().notNull().defaultNow(),
-  creadaPorId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  creadaPorId: integer('creadaPorId').notNull().references(() => users.id, { onDelete: 'cascade' }),
   modifiedAt: timestamp().notNull().defaultNow(),
-  modificadoPorId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  modificadoPorId: integer('modificadoPorId').notNull().references(() => users.id, { onDelete: 'cascade' })
 })

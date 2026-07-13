@@ -1,17 +1,19 @@
 <script setup lang="ts">
+import type { NuxtError } from '#app'
+
 const route = useRoute()
 const token = route.query.token
 
 const { fetch: refreshSession } = useUserSession()
 
 try {
-  const { data, erroro } = await useFetch('/api/user/verify-email', {
+  const { data } = await useFetch('/api/user/verify-email', {
     method: 'POST',
     body: { token }
   })
   // console.log(data.value)
   const email = data.value.mail
-  // console.log(email)
+  console.log(email)
   await refreshSession()
   await navigateTo('/admin/dashboard')
 } catch (error) {

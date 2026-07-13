@@ -2,12 +2,17 @@
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
-  roles: ['user']
+  autobj: ['ADMIN'],
+  autact: ['*'],
+  autvar: {}
 })
 </script>
 
 <template>
-  <UDashboardPanel id="settings" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel
+    id="settings"
+    :ui="{ body: 'lg:py-12' }"
+  >
     <template #header>
       <UDashboardNavbar title="User">
         <template #leading>

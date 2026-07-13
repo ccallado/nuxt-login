@@ -47,7 +47,7 @@ export const useSAPAuth = () => {
   const { user, loggedIn, fetch } = useUserSession()
 
   const checkAuthority = (
-    objectName: typeof SAP_OBJECTS_ENUM[number],
+    objectName: string,
     activity: string,
     orgFilters?: Record<string, string>,
     // 🌟 MEJORA CLAVE: Añadimos un parámetro opcional para inyectar autorizaciones frescas

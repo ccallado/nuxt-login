@@ -5,7 +5,6 @@ declare module '#auth-utils' {
     nombre: string
     avatar: string
     bio: string
-    role: Array
     authorizations: []
   }
 

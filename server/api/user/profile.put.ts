@@ -29,8 +29,7 @@ export default defineEventHandler(async (event) => {
     email: email,
     name: username,
     avatar: avatar,
-    bio: bio,
-    role: role
+    bio: bio
     // createdAt: new Date().getTime()
   }).where(eq(users.email, session?.user?.email)).returning()
 
@@ -41,8 +40,7 @@ export default defineEventHandler(async (event) => {
       email: updateUser[0].email,
       nombre: updateUser[0].nombre,
       avatar: updateUser[0].avatar,
-      bio: updateUser[0].bio,
-      role: updateUser[0].role
+      bio: updateUser[0].bio
     },
     loggedInAt: Date.now()
   })

@@ -6,8 +6,8 @@ import type { H3Event } from 'h3'
 
 export const actualizaSession = async (event: H3Event) => {
   // 1. Obtener la sesión actual del usuario de forma segura
-  let session = await getUserSession(event)
-  console.log({ session: session })
+  const session = await getUserSession(event)
+  // console.log({ session: session })
   if (!session?.id) {
     throw createError({
       statusCode: 401,
@@ -39,7 +39,7 @@ export const actualizaSession = async (event: H3Event) => {
     .innerJoin(masterRoles, eq(usersToRoles.roleName, masterRoles.name))
     .where(eq(usersToRoles.userId, currentUser.id))
 
-  console.log({ basededatos: userRolesData })
+  // console.log({ basededatos: userRolesData })
 
   // 3. Aplanar y fusionar los objetos de autorización (Evitar duplicados)
   const flattenedAuths: SAPAuthorization[] = []
@@ -66,29 +66,47 @@ export const actualizaSession = async (event: H3Event) => {
   }
 
   // Comprobación final en consola
-  console.log('RESULTADO FINAL PROCESADO:', flattenedAuths)
+  // console.log('RESULTADO FINAL PROCESADO:', flattenedAuths)
 
   // 7. Guardar el usuario con sus permisos ya resueltos en la sesión
 
   // console.log( { author: flattenedAuths })
-  await clearUserSession(event)
-  await setUserSession(event, {
+  // await clearUserSession(event)
+  // await setUserSession(event, {
+  //   user: {
+  //     // ...session.user,
+  //     name: currentUser.name ?? (currentUser.email ?? 'usuario').split('@')[0],
+  //     email: currentUser.email ?? '',
+  //     nombre: currentUser.nombre ?? '',
+  //     avatar: currentUser.avatar ?? '',
+  //     bio: currentUser.bio ?? '',
+  //     authorizations: flattenedAuths, // 👈 Ya expandidos y listos para usar
+  //     id: currentUser.id ?? 0
+  //   },
+  //   loggedInAt: Date.now()
+  // })
+
+  await replaceUserSession(event, {
+    ...session, // 1. Mantenemos intactas todas las propiedades raíz (loggedInAt, etc.)
     user: {
-      // ...session.user,
+      ...session.user, // 2. Propagamos los datos fijos del usuario
+      id: currentUser.id ?? 0,
       name: currentUser.name ?? (currentUser.email ?? 'usuario').split('@')[0],
       email: currentUser.email ?? '',
       nombre: currentUser.nombre ?? '',
       avatar: currentUser.avatar ?? '',
       bio: currentUser.bio ?? '',
-      role: currentUser.role ?? [],
-      authorizations: flattenedAuths, // 👈 Ya expandidos y listos para usar
-      id: currentUser.id ?? 0
-    },
-    loggedInAt: Date.now()
+      authorizations: flattenedAuths, // 3. Reemplazamos la matriz vieja por la limpia y fusionada
+      // 4. 👑 CRUCIAL: Forzamos la actualización del reloj.
+      // Esto le dice al middleware global en el próximo clic que este usuario
+      // ya está al día con Postgres y detiene cualquier bucle de acumulación.
+      sessionCreatedAt: new Date()
+    }
   })
+  console.log({ session })
 
-  const cookieRealEnviada = JSON.parse(JSON.stringify(flattenedAuths))
-  console.log({ autorización: cookieRealEnviada })
+  // const cookieRealEnviada = JSON.parse(JSON.stringify(flattenedAuths))
+  // console.log({ autorización: cookieRealEnviada })
   // session = await getUserSession(event)
   // console.log({ flattenedAuths: flattenedAuths })
   // console.log({ autorización: session.user.authorizations })

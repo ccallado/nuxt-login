@@ -11,7 +11,7 @@ const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
 // Nos traemos la sesión del usuario
-const { user, clear: clearSession } = useUserSession()
+const { session, user, clear: clearSession } = useUserSession()
 
 const usuario = computed(() => ({
   name: user?.value?.nombre || '',
@@ -152,11 +152,27 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   icon: 'i-lucide-log-out',
   // Definimos la acción al hacer clic
   onSelect: async () => {
-    // 1. Borra la cookie de sesión en el servidor y cliente
-    await clearSession()
+    const sessionId = user.value?.sessionId || (user.value as any)?.sessionId || (user.value as any)?.sessionId
 
-    // 2. Redirige al usuario inmediatamente
-    await navigateTo('/login')
+    if (sessionId) {
+      try {
+        // Notificamos a la API de PostgreSQL para revocar la sesión activa antes de borrar la cookie
+        await $fetch('/api/auth/sessions', {
+          method: 'DELETE',
+          body: { targetSessionId: sessionId }
+        })
+        // console.log(`Sesión ${sessionId} eliminada de Postgres exitosamente.`)
+        await clearSession()
+      } catch (error) {
+        console.warn('Aviso durante el cierre de sesión (omitido para asegurar la salida):', error)
+      } finally {
+        user.value = null
+        if (session.value) {
+          session.value = null
+        }
+        await navigateTo('/login', { replace: true })
+      }
+    }
   }
 }]]))
 </script>

@@ -1,46 +1,102 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
+// 1. Importamos tu composable de autenticación
+import { useSAPAuth } from '~/composables/useSAPAuth'
 
-// definePageMeta({
-//   middleware: ['authenticated'],
-//   layout: 'dashboard-layout',
-//   roles: ['admin']
-// })
 definePageMeta({
   middleware: ['authenticated'],
-  layout: 'dashboard-layout',
-  autobj: ['F_BKPF_BUK'],
-  autact: ['01'],
-  autvar: { BUKRS: '1000' }
+  layout: 'dashboard-layout'
+  // autobj: ['ADMIN'],
+  // autact: ['*'],
+  // autvar: ['']
 })
 
-const links = [[{
-  label: 'General',
+// 2. Extendemos el tipo nativo para dar soporte a tus propiedades de SAP
+interface CustomNavigationItem extends NavigationMenuItem {
+  objReq?: string
+  actReq?: string
+  varReq?: string
+  children?: CustomNavigationItem[]
+}
+
+const { checkAuthority } = useSAPAuth()
+
+// 3. Declaramos los enlaces base usando la interfaz extendida
+const rawLinks: CustomNavigationItem[][] = [[{
+  label: 'Mi perfil',
   icon: 'i-lucide-user',
   to: '/admin/settings',
-  exact: true
+  exact: true,
+  objReq: 'USUARIO',
+  actReq: '01',
+  varReq: ''
 }, {
   label: 'Usuarios',
   icon: 'i-lucide-users',
-  to: '/admin/settings/members'
+  to: '/admin/settings/members',
+  objReq: 'ADMIN',
+  actReq: '01',
+  varReq: ''
 }, {
-  label: 'Notifications',
+  label: 'Sesiones',
   icon: 'i-lucide-bell',
-  to: '/admin/settings/notifications'
+  to: '/admin/settings/sesiones',
+  objReq: 'USUARIO',
+  actReq: '01',
+  varReq: ''
 }, {
   label: 'Roles',
   icon: 'lucide:user-round-check',
-  to: '/admin/settings/roles'
+  to: '/admin/settings/roles',
+  objReq: 'ADMIN',
+  actReq: '01',
+  varReq: ''
 }, {
   label: 'Cambio de Contraseña',
   icon: 'i-lucide-shield',
-  to: '/admin/settings/security'
+  to: '/admin/settings/security',
+  objReq: 'USUARIO',
+  actReq: '01',
+  varReq: ''
 }], [{
   label: 'Documentación',
   icon: 'i-lucide-book-open',
   to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
   target: '_blank'
-}]] satisfies NavigationMenuItem[][]
+}]] satisfies CustomNavigationItem[][]
+
+// 4. Función recursiva para filtrar dinámicamente según checkAuthority
+function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
+  return items.flatMap((item) => {
+    const hasNoRestrictions = !item.objReq && !item.actReq && !item.varReq
+    const orgFilters = item.varReq ? { FIELD: item.varReq } : undefined
+
+    // Ejecutamos tu función con los 3 argumentos que espera el composable
+    const isAuthorized = hasNoRestrictions || checkAuthority(
+      item.objReq ?? '',
+      item.actReq ?? '',
+      orgFilters
+    )
+
+    if (!isAuthorized) {
+      return []
+    }
+
+    const processedItem: NavigationMenuItem = { ...item }
+
+    if (item.children) {
+      processedItem.children = processMenuItems(item.children)
+    }
+
+    return [processedItem]
+  })
+}
+
+// 5. Variable reactiva final que consume el componente UNavigationMenu
+const links = computed<NavigationMenuItem[][]>(() => {
+  return rawLinks.map(group => processMenuItems(group))
+})
 </script>
 
 <template>
@@ -56,7 +112,7 @@ const links = [[{
       </UDashboardNavbar>
 
       <UDashboardToolbar>
-        <!-- NOTE: The `-mx-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
+        <!-- NOTE: El array reactivo computado 'links' filtrará las pestañas automáticamente aquí -->
         <UNavigationMenu
           :items="links"
           highlight

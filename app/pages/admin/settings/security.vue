@@ -7,9 +7,9 @@ import type { NuxtError } from '#app'
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
-  autobj: ['F_BKPF_BUK'],
-  autact: ['02'],
-  autvar: { BUKRS: '1000' }
+  autobj: ['USUARIO'],
+  autact: ['01'],
+  autvar: {}
 })
 
 const password = reactive<Partial<PasswordSchemaType>>({
@@ -28,7 +28,7 @@ const validate = (state: Partial<PasswordSchemaType>): FormError[] => {
 
 const toast = useToast()
 
-const { user, clear: clearSession } = useUserSession()
+const { clear: clearSession } = useUserSession()
 
 async function onSubmit(event: FormSubmitEvent<PasswordSchemaType>) {
   try {

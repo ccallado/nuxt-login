@@ -1,6 +1,6 @@
 import { loginSchema } from '#shared/zod/login.schema'
 import { eq } from 'drizzle-orm'
-import { users } from '#server/db/schema'
+import { users, userSessions } from '#server/db/schema'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { actualizaSession } from '~~/server/utils/actualiza-session'
@@ -111,77 +111,37 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 7. Guardar el usuario con sus permisos ya resueltos en la sesión
+  // 🌟 NUEVA LÓGICA DE CONTROL DE SESIONES CENTRALIZADA:
+  const sessionId = crypto.randomUUID()
+  const userAgent = getHeader(event, 'user-agent') || 'Dispositivo Desconocido'
+  const ip = getHeader(event, 'x-forwarded-for') || event.node.req.socket.remoteAddress || '127.0.0.1'
+
+  // Guardamos los metadatos de la sesión física en Postgres usando Drizzle
+  await db.insert(userSessions).values({
+    id: sessionId,
+    userId: user.id,
+    device: userAgent,
+    ipAddress: ip
+  })
+
+  // Guardar el usuario incluyendo el sessionId recién generado en la cookie cifrada
   await setUserSession(event, {
     user: {
       id: user.id,
-      name: user.name || email.split('@')[0],
+      sessionId: sessionId, // 👈 Vinculación directa cookie-base de datos
+      name: user.name || user.email.split('@')[0],
       email: user.email,
       nombre: user.nombre,
       avatar: user.avatar,
       bio: user.bio,
-      role: user.role,
-      authorizations: [] // 👈 Ya expandidos y listos para usar
+      authorizations: [],
+      sessionCreatedAt: new Date()
     },
     loggedInAt: Date.now()
   })
 
-  // console.log({ antes: event })
   await actualizaSession(event)
-  // // 1. Obtener los Roles Maestros asignados al usuario y sus objetos internos
-  // const userRolesData = await db
-  //   .select({ authorizations: masterRoles.authorizations })
-  //   .from(usersToRoles)
-  //   .innerJoin(masterRoles, eq(usersToRoles.roleName, masterRoles.name))
-  //   .where(eq(usersToRoles.userId, user.id))
 
-  // console.log({ basededatos: userRolesData })
-  // // 2. Aplanar y fusionar los objetos de autorización (Evitar duplicados)
-  // const flattenedAuths: SAPAuthorization[] = []
-
-  // for (const row of userRolesData) {
-  //   // CORRECCIÓN CLAVE: Si es un string, lo parseamos a JSON. Si ya es objeto, lo usamos directamente.
-  //   const authorizations = typeof row.authorizations === 'string'
-  //     ? JSON.parse(row.authorizations)
-  //     : (row.authorizations || [])
-
-  //   // Ahora 'authorizations' es un array real y podemos iterar sobre sus objetos correctamente
-  //   for (const authObj of authorizations) {
-  //     if (!authObj || !authObj.object) continue
-
-  //     const existing = flattenedAuths.find(a => a.object === authObj.object)
-
-  //     if (existing) {
-  //       // Si el objeto ya existe, combinamos los permisos (Regla de acumulación de SAP)
-  //       Object.keys(authObj.fields || {}).forEach(field => {
-  //         const combined = [...(existing.fields[field] || []), ...(authObj.fields[field] || [])]
-  //         existing.fields[field] = [...new Set(combined)] // Eliminar duplicados
-  //       })
-  //     } else {
-  //       // Copia profunda limpia para romper referencias a la base de datos
-  //       flattenedAuths.push(JSON.parse(JSON.stringify(authObj)))
-  //     }
-  //   }
-  // }
-
-  // // Comprobación final en consola
-  // console.log('RESULTADO FINAL PROCESADO:', flattenedAuths)
-
-  // // 7. Guardar el usuario con sus permisos ya resueltos en la sesión
-  // await setUserSession(event, {
-  //   user: {
-  //     name: user.name || email.split('@')[0],
-  //     email: user.email,
-  //     nombre: user.nombre,
-  //     avatar: user.avatar,
-  //     bio: user.bio,
-  //     role: user.role,
-  //     authorizations: flattenedAuths // 👈 Ya expandidos y listos para usar
-  //   },
-  //   loggedInAt: Date.now()
-  // })
-
-  // console.log({ autorización: user.authorizations })
   return {
     message: 'Login correcto'
   }

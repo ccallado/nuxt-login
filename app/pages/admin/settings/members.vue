@@ -8,19 +8,23 @@ const { data: members } = await useFetch<Member[]>('/api/user/members', {
 const q = ref('')
 
 const filteredMembers = computed(() => {
-  return members.value.filter((member) => {
-    return member.name.search(new RegExp(q.value, 'i')) !== -1 || member.username.search(new RegExp(q.value, 'i')) !== -1
+  return (members.value ?? []).filter((member) => {
+    // Usamos encadenamiento opcional (?.) por si algún miembro de la base de datos
+    // no tiene configurado el campo 'name' o 'username'
+    const nameMatch = member.name?.search(new RegExp(q.value, 'i')) !== -1
+    const usernameMatch = member.username?.search(new RegExp(q.value, 'i')) !== -1
+
+    return nameMatch || usernameMatch
   })
 })
 
-// definePageMeta({
-//   middleware: ['authenticated'],
-//   layout: 'dashboard-layout',
-//   roles: ['user'],
-//   autobj: ['F_BKPF_BUK'],
-//   autact: ['01'],
-//   autvar: { BUKRS: '1000' }
-// })
+definePageMeta({
+  middleware: ['authenticated'],
+  layout: 'dashboard-layout',
+  autobj: ['ADMIN'],
+  autact: ['01'],
+  autvar: {}
+})
 </script>
 
 <template>
@@ -39,7 +43,10 @@ const filteredMembers = computed(() => {
       /> -->
     </UPageCard>
 
-    <UPageCard variant="subtle" :ui="{ container: 'p-0 sm:p-0 gap-y-0', wrapper: 'items-stretch', header: 'p-4 mb-0 border-b border-default' }">
+    <UPageCard
+      variant="subtle"
+      :ui="{ container: 'p-0 sm:p-0 gap-y-0', wrapper: 'items-stretch', header: 'p-4 mb-0 border-b border-default' }"
+    >
       <template #header>
         <UInput
           v-model="q"

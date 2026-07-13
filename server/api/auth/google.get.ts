@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm'
-import { users, account } from '#server/db/schema'
+import { users, account, userSessions } from '#server/db/schema'
 import jwt from 'jsonwebtoken'
+// import { clearNuxtData } from 'nuxt/app'
 
 export default defineOAuthGoogleEventHandler({
   async onSuccess(event, { user }) {
@@ -16,8 +17,7 @@ export default defineOAuthGoogleEventHandler({
         // password: hashedPassword,
         avatar: '',
         bio: '',
-        nombre: user.email.split('@')[0],
-        role: ['user']
+        nombre: user.email.split('@')[0]
         // createdAt: new Date().getTime()
       }).returning({ id: users.id })
       usuario = nuevoUsuarioCreado
@@ -92,19 +92,38 @@ export default defineOAuthGoogleEventHandler({
       }
       return sendRedirect(event, '/register?msg=verification_pending')
     }
+
+    // 🌟 NUEVA LÓGICA DE CONTROL DE SESIONES CENTRALIZADA:
+    const sessionId = crypto.randomUUID()
+    const userAgent = getHeader(event, 'user-agent') || 'Dispositivo Desconocido'
+    const ip = getHeader(event, 'x-forwarded-for') || event.node.req.socket.remoteAddress || '127.0.0.1'
+    const userId = Number(accountuser[0].userId)
+    // console.log({ accountuser })
+    // Guardamos los metadatos de la sesión física en Postgres usando Drizzle
+    await db.insert(userSessions).values({
+      id: sessionId,
+      userId: userId,
+      device: userAgent,
+      ipAddress: ip
+    })
+
     await setUserSession(event, {
       user: {
         id: usuario.id,
+        sessionId: sessionId, // 👈 Vinculación directa cookie-base de datos
         name: usuario.name || usuario.email.split('@')[0],
         email: usuario.email,
-        nombre: usuario.nombre,
+        nombre: usuario.nombre || 'vacío',
         avatar: usuario.avatar,
         bio: usuario.bio,
-        role: usuario.role,
-        authorizations: []
+        authorizations: [],
+        sessionCreatedAt: new Date()
       },
       loggedInAt: Date.now()
     })
+
+    await actualizaSession(event)
+
     return sendRedirect(event, '/admin/dashboard')
   }
 })

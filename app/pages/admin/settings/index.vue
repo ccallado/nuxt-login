@@ -6,14 +6,13 @@ import type { ProfileSchemaType } from '#shared/zod/profile.schema'
 const fileRef = ref<HTMLInputElement>()
 const { checkAuthority } = useSAPAuth()
 
-// definePageMeta({
-//   middleware: ['authenticated'],
-//   layout: 'dashboard-layout',
-//   roles: ['user'],
-//   autobj: ['F_BKPF_BUK'],
-//   autact: ['01'],
-//   autvar: { BUKRS: '1000' }
-// })
+definePageMeta({
+  middleware: ['authenticated'],
+  layout: 'dashboard-layout',
+  autobj: ['USUARIO'],
+  autact: ['01'],
+  autvar: {}
+})
 
 // Nos traemos la sesión del usuario
 const { fetch: refreshSession } = useUserSession()
@@ -28,11 +27,10 @@ const profileState = reactive<Partial<ProfileSchemaType>>({
   email: userDB?.value?.email || '',
   username: userDB?.value?.name || '',
   avatar: userDB?.value?.avatar || '',
-  bio: userDB?.value?.bio || '',
-  role: userDB?.value?.role || ['']
+  bio: userDB?.value?.bio || ''
 })
 
-console.log(checkAuthority('F_BKPF_BUK', '01', { BUKRS: '1000' }))
+// console.log(checkAuthority('F_BKPF_BUK', '01', { BUKRS: '1000' }))
 
 const toast = useToast()
 async function onSubmit(event: FormSubmitEvent<ProfileSchemaType>) {
@@ -104,12 +102,10 @@ function onFileClick() {
       <NuxtLink to="/">Inicio</NuxtLink>
 
       <!-- Este enlace solo lo verá el administrador -->
-      <!-- <CanAccess :roles="['admin']"> -->
       <!-- Verificar si puede CREAR (01) en la SOCIEDAD 1000 -->
-      <div v-if="checkAuthority('F_BKPF_BUK', '01', { BUKRS: '1000' })">
+      <div v-if="checkAuthority('ADMIN', '*', { ROLES: '*' })">
         <NuxtLink to="/admin/dashboard">Configuración avanzada</NuxtLink>
       </div>
-      <!-- </CanAccess> -->
     </nav>
 
     <UPageCard
@@ -142,34 +138,36 @@ function onFileClick() {
         />
       </UFormField>
       <USeparator />
-      <UFormField
-        name="email"
-        label="Email"
-        description="Used to sign in, for email receipts and product updates."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput
-          v-model="profileState.email"
-          type="email"
-          autocomplete="off"
-        />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="username"
-        label="Username"
-        description="Your unique username for logging in and your profile URL."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput
-          v-model="profileState.username"
-          type="username"
-          autocomplete="off"
-        />
-      </UFormField>
-      <USeparator />
+      <div v-if="checkAuthority('ADMIN', '*', { ROLES: '*' })">
+        <UFormField
+          name="email"
+          label="Email"
+          description="Used to sign in, for email receipts and product updates."
+          required
+          class="flex max-sm:flex-col justify-between items-start gap-4"
+        >
+          <UInput
+            v-model="profileState.email"
+            type="email"
+            autocomplete="off"
+          />
+        </UFormField>
+        <USeparator />
+        <UFormField
+          name="username"
+          label="Username"
+          description="Your unique username for logging in and your profile URL."
+          required
+          class="flex max-sm:flex-col justify-between items-start gap-4"
+        >
+          <UInput
+            v-model="profileState.username"
+            type="username"
+            autocomplete="off"
+          />
+        </UFormField>
+        <USeparator />
+      </div>
       <UFormField
         name="avatar"
         label="Avatar"
@@ -213,9 +211,8 @@ function onFileClick() {
       </UFormField>
       <!-- Verificar si puede CREAR (01) en la SOCIEDAD 1000 -->
       <div v-if="checkAuthority('F_BKPF_BUK', '01', { BUKRS: '1000' })">
-        <!-- <CanAccess :roles="['admin']"> -->
         <USeparator />
-        <UFormField
+        <!-- <UFormField
           name="role"
           label="Roles"
           description="Roles que tiene el usuario"
@@ -228,12 +225,7 @@ function onFileClick() {
             variant="outline"
             class="w-full"
           />
-
-          <!-- <p class="mt-2 text-sm text-gray-500">
-            Valores actuales: {{ profileState.role }}
-          </p> -->
-        </UFormField>
-        <!-- </CanAccess> -->
+        </UFormField> -->
       </div>
     </UPageCard>
   </UForm>

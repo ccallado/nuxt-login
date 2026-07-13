@@ -1,5 +1,5 @@
 // import { db } from '~/server/database/db'
-import { usersToRoles } from '#server/db/schema'
+import { usersToRoles, users } from '#server/db/schema'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 // 1. Importamos el tipo nativo de transacción para Postgres
@@ -28,6 +28,12 @@ export default defineEventHandler(async (event) => {
       }))
       await tx.insert(usersToRoles).values(valuesToInsert)
     }
+    await tx.update(users)
+      .set({
+        roles,
+        authUpdatedAt: new Date() // 👑 Forzamos que cambie la fecha de actualización
+      })
+      .where(eq(users.id, userId))
   })
 
   await actualizaSession(event)

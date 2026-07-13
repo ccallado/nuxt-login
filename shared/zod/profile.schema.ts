@@ -5,8 +5,7 @@ export const profileSchema = z.object({
   email: z.string().email('Invalid email'),
   name: z.string().min(2, 'Too short'),
   avatar: z.string().optional(),
-  bio: z.string().max(160).optional(),
-  role: z.array(z.string())
+  bio: z.string().max(160).optional()
 })
 
 export type ProfileSchemaType = z.output<typeof profileSchema>

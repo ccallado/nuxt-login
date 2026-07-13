@@ -6,8 +6,7 @@ import type { NuxtError } from '#app'
 
 definePageMeta({
   middleware: ['authenticated'],
-  roles: ['user']
-
+  layout: 'default-layout'
 })
 
 const { fetch: refreshSession } = useUserSession()
@@ -21,21 +20,21 @@ const fields: AuthFormField[] = [{
   name: 'email',
   type: 'email',
   label: 'Email',
-  placeholder: 'Enter your email',
+  placeholder: 'Introduce tu email',
   required: true,
   defaultValue: 'ccallado@hotmail.com'
 }, {
   name: 'password',
-  label: 'Password',
+  label: 'Contraseña',
   type: 'password',
-  placeholder: 'Enter your password',
+  placeholder: 'Introduce tu contraseña',
   required: true,
   defaultValue: '12341234'
 }, {
   name: 'confirmPassword',
-  label: 'Confirm Password',
+  label: 'Confirma la Contraseña',
   type: 'password',
-  placeholder: 'Confirm your password',
+  placeholder: 'Confirma tu contraseña',
   required: true,
   defaultValue: '12341234'
 }]
@@ -89,17 +88,17 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
         :fields="fields"
         :providers="providers"
         :loading="loading"
-        title="Welcome back!"
+        title="¡Bienvenido!"
         icon="i-lucide-lock"
         @submit="onSubmit"
       >
         <!-- <template #description>
-          Don't have an account?
+          ¿No tienes una cuenta?
           <ULink
             to="#"
             class="text-primary font-medium"
           >
-            Sign up
+            Regístrate
           </ULink>.
         </template> -->
         <!-- <template #password-hint>
@@ -108,7 +107,7 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
             class="text-primary
             font-medium"
             tabindex="-1"
-          >Forgot password?
+          >¿Olvidaste la contraseña?
           </ULink>
         </template> -->
         <template #validation>
@@ -120,12 +119,12 @@ async function onSubmit(payload: FormSubmitEvent<LoginSchemaConfType>) {
           />
         </template>
         <template #footer>
-          By signing in, you agree to our
+          Al iniciar sesión, aceptas nuestros términos y condiciones.
           <ULink
             to="#"
             class="text-primary
             font-medium"
-          >Terms of Service</ULink>.
+          >Condiciones del servicio</ULink>.
         </template>
       </UAuthForm>
     </UPageCard>

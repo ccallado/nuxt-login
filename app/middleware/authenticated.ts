@@ -1,42 +1,57 @@
-export default defineNuxtRouteMiddleware((to) => {
-  const { user, loggedIn } = useUserSession()
-  const allowedRoles = to.meta.roles as string[]
-  const autobj = to.meta.autobj as string[] | undefined
-  const autact = to.meta.autact as string[] | undefined
-  const autvar = to.meta.autvar as Record<string, string> | undefined // 👑 Cambiado a string[]
+export default defineNuxtRouteMiddleware(async (to) => {
+  const { user, loggedIn, fetch: refreshSession } = useUserSession()
 
-  const { checkAuthority } = useSAPAuth()
-
-  // console.log({ autobj: autobj })
-  // console.log({ autact: autact })
-  // console.log({ autvar: autvar })
-  // console.log(allowedRoles)
-
-  // 1. Verificar si el usuario ha iniciado sesión y está en register o login
+  // console.log({ aut: user.value?.authorizations })
+  // 1. CONTROL DE ACCESO GLOBAL (Siempre al principio)
+  // Evita bucles infinitos y protege las páginas públicas
   if (loggedIn.value && (to.path === '/login' || to.path === '/register')) {
     return navigateTo('/admin/dashboard')
   }
 
-  // 1. Verificar si el usuario no ha iniciado sesión y no está en register o login
-  if (!loggedIn.value && to.path != '/login' && to.path != '/register') {
+  if (!loggedIn.value && to.path !== '/login' && to.path !== '/register') {
     return navigateTo('/login')
   }
 
-  if (!autobj || autobj.length === 0) return
+  // Si no hay sesión activa tras el filtro anterior, detenemos cualquier proceso
+  if (!loggedIn.value) return
 
-  // const userRolesArray = user.value.role.split(',')
+  // 2. FILTRO DE METADATOS SAP
+  const autobj = to.meta.autobj as string[] | undefined
+  const autact = to.meta.autact as string[] | undefined
+  const autvar = to.meta.autvar as Record<string, string> | undefined
 
-  const objReq = autobj[0]
-  const actReq = autact && autact.length > 0 ? autact[0]: ''
-  const varReq = autvar || {}
+  // Si la página de destino no requiere autorizaciones específicas SAP, permitimos el acceso libre
+  if (!autobj || autobj.length === 0) {
+    return
+  }
 
-  // 2. Verificar si el rol de la sesión encriptada tiene acceso
-  // if (!user.value || !user.value.role.some(role => allowedRoles.includes(role))) {
+  // 3. SINCRONIZACIÓN EN CALIENTE / TIEMPO REAL (Postgresql)
+  try {
+    const syncCheck = await $fetch<{ mustRefresh: boolean }>('/api/auth/sync-check', {
+      credentials: 'include'
+    })
+
+    if (syncCheck?.mustRefresh) {
+      await refreshSession()
+      // console.log('🔄 Autorizaciones actualizadas en caliente para el usuario activo.')
+    }
+  } catch (error) {
+    console.error('Error al sincronizar autorizaciones en segundo plano:', error)
+  }
+
+  // 4. PREPARACIÓN DE PERMISOS BLINDADA PARA TYPESCRIPT
+  const { checkAuthority } = useSAPAuth()
+
+  // Extraemos el primer índice asegurando un string primitivo con ?? ''
+  const objReq: string = autobj[0] ?? ''
+
+  // 👑 CORRECCIÓN DE TIPOS: Forzamos la extracción limpia del string y agregamos respaldo estricto
+  const actReq: string = (autact && autact.length > 0) ? (autact[0] ?? '03') : '03'
+
+  const varReq: Record<string, string> = autvar ?? {}
+
+  // 5. EVALUACIÓN FINAL DE AUTORIDAD SAP
   if (!user.value || !checkAuthority(objReq, actReq, varReq)) {
-    // if (!user.value || !userRolesArray.some(role => allowedRoles.includes(role))) {
-    // console.log({ user })
-    // console.log('unauthorized')
-    // console.log(!userRolesArray.some(role => allowedRoles.includes(role)))
     return navigateTo('/unauthorized')
   }
 })
