@@ -78,7 +78,8 @@ export const userSessions = pgTable('user_sessions', {
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   device: text('device').notNull(), // User-Agent (Chrome, Safari, etc.)
   ipAddress: text('ip_address').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull()
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  modifiedAt: timestamp('modified_at').defaultNow().notNull()
 })
 
 // 8. Tabla de menu de navegación
@@ -99,16 +100,55 @@ export const navigationMenu = pgTable('navigation_menu', {
   displayOrder: integer('display_order').default(0).notNull() // Orden de aparición visual en la barra lateral
 })
 
+// 9. Tabla de definición de Páginas
+export const pages = pgTable('pages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
+  title: varchar('title', { length: 255 }).notNull(),
+  // NUEVA COLUMNA: Metadatos nativos para el core de Nuxt y Seguridad SAP
+  meta: jsonb('meta').$type<{
+    middleware?: string[]
+    layout?: string
+    autobj?: string[]
+    autact?: string[]
+    autvar?: Record<string, any>
+  }>(),
+  // Almacenará la configuración de las pestañas, textos, botones y rutas
+  content: jsonb('content').$type<{
+    header: { title: string, description: string }
+    tabs: { slot: string, label: string, icon?: string }[]
+    tableTab: {
+      title: string
+      btnObjectsLabel: string
+      btnObjectsTo: string
+      btnCreateLabel: string
+      btnCreateTo: string
+      btnActionLabel: string
+    }
+    assignTab: {
+      title: string
+      btnAssignLabel: string
+      formTitle: string
+      formSelectLabel: string
+      formPlaceholder: string
+      btnSaveLabel: string
+      btnCancelLabel: string
+      placeholderText: string
+    }
+  }>().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+})
+
 // 10. Tabla de propiedades
 export const propiedades = pgTable('propiedades', {
   // Genera un UUID automático y único en PostgreSQL
   id: uuid('id').defaultRandom().primaryKey(),
   calle: text('calle').notNull(),
-  numero: text('número'),
+  numero: text('numero'),
   escalera: text('escalera'),
   planta: text('planta'),
   letra: text('letra'),
-  descripcion: text('descripción').notNull(),
+  descripcion: text('descripcion').notNull(),
   propietarioId: integer('propietarioId').notNull().references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp().notNull().defaultNow(),
   creadaPorId: integer('creadaPorId').notNull().references(() => users.id, { onDelete: 'cascade' }),

@@ -24,7 +24,8 @@ export default defineNuxtConfig({
     }
   },
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
+    '/admin/**': { ssr: false }
   },
 
   compatibilityDate: '2026-05-21',

@@ -6,10 +6,10 @@ import { useSAPAuth } from '~/composables/useSAPAuth'
 
 definePageMeta({
   middleware: ['authenticated'],
-  layout: 'dashboard-layout'
-  // autobj: ['PROPIEDADES'],
-  // autact: ['01'],
-  // autvar: ['']
+  layout: 'dashboard-layout',
+  autobj: ['PROPIEDADES'],
+  autact: ['01'],
+  autvar: ['']
 })
 
 // 2. Extendemos el tipo nativo para dar soporte a tus propiedades de SAP

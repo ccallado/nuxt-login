@@ -141,6 +141,6 @@ export default defineOAuthGitHubEventHandler({
 
     await actualizaSession(event)
 
-    return sendRedirect(event, '/admin/dashboard')
+    return sendRedirect(event, '/')
   }
 })

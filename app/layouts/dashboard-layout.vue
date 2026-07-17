@@ -1,14 +1,16 @@
+<!-- eslint-disable @stylistic/no-trailing-spaces -->
 <template>
   <UDashboardGroup unit="rem">
     <UDashboardSidebar
       id="default"
       v-model:open="open"
+      v-model:collapsed="collapsed"
       collapsible
       resizable
       class="bg-elevated/25"
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
-      <template #header Grams="{ collapsed }">
+      <template #header="{ collapsed }">
         <TeamsMenu :collapsed="collapsed" />
       </template>
 
@@ -18,7 +20,6 @@
           class="bg-transparent ring-default"
         />
 
-        <!-- 👑 SOLUCIÓN: Renderiza el bloque superior dinámico directo de Postgres -->
         <UNavigationMenu
           :collapsed="collapsed"
           :items="menuItems[0]"
@@ -31,7 +32,6 @@
           }"
         />
 
-        <!-- 👑 SOLUCIÓN: Renderiza el bloque inferior dinámico directo de Postgres -->
         <UNavigationMenu
           :collapsed="collapsed"
           :items="menuItems[1]"
@@ -48,15 +48,43 @@
 
     <UDashboardSearch :groups="groups" />
 
-    <slot />
+    <UDashboardPanel class="flex-1 w-full min-w-0">
+      <slot />
+    </UDashboardPanel>
   </UDashboardGroup>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { onMounted, onUnmounted, computed, ref } from 'vue'
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useRoute } from 'vue-router'
 import { useSAPAuth } from '~/composables/useSAPAuth'
+
+const totalSesionesVivas = ref(0)
+
+// Función que consulta el contador rápido
+const fetchSessionsCount = async () => {
+  try {
+    const res = await $fetch<{ total: number }>('/api/admin/sessions-count')
+    totalSesionesVivas.value = res.total
+  } catch (err) {
+    console.warn('No se pudo actualizar el conteo de sesiones')
+  }
+}
+
+let intervalId: any = null
+
+onMounted(() => {
+  // Primer disparo inmediato al entrar
+  fetchSessionsCount()
+
+  // 👑 REFRESCO EN TIEMPO REAL: Cada 15 segundos le pregunta a Postgres si hay cambios
+  intervalId = setInterval(fetchSessionsCount, 15000)
+})
+
+onUnmounted(() => {
+  if (intervalId) clearInterval(intervalId)
+})
 
 interface CustomNavigationItem extends NavigationMenuItem {
   objReq?: string
@@ -97,7 +125,11 @@ function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
     // 👑 CORRECCIÓN 3: Pasamos 'badge' explícitamente para asegurar que Nuxt UI v3 lo renderice
     const processedItem: NavigationMenuItem = {
       ...item,
-      badge: item.badge,
+      badge: (item.to?.toString().toLowerCase().includes('sesion')
+        || item.label?.toLowerCase().includes('sesion'))
+        ? totalSesionesVivas.value
+        : item.badge,
+
       onSelect: () => { open.value = false }
     }
 

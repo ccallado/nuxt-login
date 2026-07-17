@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
         campos: campos.filter(c => c.objectName === obj.objectName)
       }))
     } catch (error: any) {
-      throw createError({ statusCode: 500, statusMessage: error.message })
+      throw createError({ statusCode: 500, message: error.message })
     }
   }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
       const { objectName, description, isEditing } = body
 
       if (!objectName || !description) {
-        throw createError({ statusCode: 400, statusMessage: 'Datos incompletos.' })
+        throw createError({ statusCode: 400, message: 'Datos incompletos.' })
       }
 
       const upperName = objectName.toUpperCase()
@@ -55,9 +55,9 @@ export default defineEventHandler(async (event) => {
       return { success: true }
     } catch (error: any) {
       if (error.code === '23505') {
-        throw createError({ statusCode: 400, statusMessage: 'El objeto ya existe en el catálogo.' })
+        throw createError({ statusCode: 400, message: 'El objeto ya existe en el catálogo.' })
       }
-      throw createError({ statusCode: 500, statusMessage: error.message })
+      throw createError({ statusCode: 500, message: error.message })
     }
   }
 
@@ -67,14 +67,14 @@ export default defineEventHandler(async (event) => {
       const query = getQuery(event)
       const name = query.objectName as string
 
-      if (!name) throw createError({ statusCode: 400, statusMessage: 'ID requerido.' })
+      if (!name) throw createError({ statusCode: 400, message: 'ID requerido.' })
 
       // Al tener ON DELETE CASCADE configurado en Drizzle, se borrarán sus campos automáticamente en Postgres
       await db.delete(sapObjectsMaster).where(eq(sapObjectsMaster.objectName, name))
 
       return { success: true }
     } catch (error: any) {
-      throw createError({ statusCode: 500, statusMessage: error.message })
+      throw createError({ statusCode: 500, message: error.message })
     }
   }
 })

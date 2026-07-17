@@ -5,7 +5,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // 1. CONTROL DE ACCESO GLOBAL (Siempre al principio)
   // Evita bucles infinitos y protege las páginas públicas
   if (loggedIn.value && (to.path === '/login' || to.path === '/register')) {
-    return navigateTo('/admin/dashboard')
+    return navigateTo('/')
   }
 
   if (!loggedIn.value && to.path !== '/login' && to.path !== '/register') {

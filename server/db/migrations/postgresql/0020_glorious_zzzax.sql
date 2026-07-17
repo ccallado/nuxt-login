@@ -1,0 +1,1 @@
+ALTER TABLE "user_sessions" ADD COLUMN "modified_at" timestamp DEFAULT now() NOT NULL;

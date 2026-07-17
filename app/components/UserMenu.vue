@@ -170,7 +170,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
         if (session.value) {
           session.value = null
         }
-        await navigateTo('/login', { replace: true })
+        await navigateTo('/', { replace: true })
       }
     }
   }

@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     throw createError({
       statusCode: 500,
-      statusMessage: `Error al cargar configuración SAP: ${error.message}`
+      message: `Error al cargar configuración SAP: ${error.message}`
     })
   }
 })

@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     try {
       return await db.select().from(sapObjectFields)
     } catch (error: any) {
-      throw createError({ statusCode: 500, statusMessage: error.message })
+      throw createError({ statusCode: 500, message: error.message })
     }
   }
 
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 
       // Validación básica
       if (!body.objectName || !body.fieldName || !body.description) {
-        throw createError({ statusCode: 400, statusMessage: 'Todos los campos son obligatorios' })
+        throw createError({ statusCode: 400, message: 'Todos los campos son obligatorios' })
       }
 
       await db.insert(sapObjectFields).values({
@@ -34,9 +34,9 @@ export default defineEventHandler(async (event) => {
     } catch (error: any) {
       // Control de duplicados en clave primaria compuesta
       if (error.code === '23505') {
-        throw createError({ statusCode: 400, statusMessage: 'Ese campo ya existe en este objeto SAP.' })
+        throw createError({ statusCode: 400, message: 'Ese campo ya existe en este objeto SAP.' })
       }
-      throw createError({ statusCode: 500, statusMessage: error.message })
+      throw createError({ statusCode: 500, message: error.message })
     }
   }
 
@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
       const fieldName = query.fieldName as string
 
       if (!objectName || !fieldName) {
-        throw createError({ statusCode: 400, statusMessage: 'Faltan parámetros identificadores' })
+        throw createError({ statusCode: 400, message: 'Faltan parámetros identificadores' })
       }
 
       // Al ser clave compuesta, filtramos por ambos campos obligatoriamente
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
 
       return { success: true }
     } catch (error: any) {
-      throw createError({ statusCode: 500, statusMessage: error.message })
+      throw createError({ statusCode: 500, message: error.message })
     }
   }
 })

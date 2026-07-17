@@ -13,7 +13,7 @@ try {
   })
   // console.log(data.value)
   const email = data.value.mail
-  console.log(email)
+  // console.log(email)
   await refreshSession()
   await navigateTo('/admin/dashboard')
 } catch (error) {

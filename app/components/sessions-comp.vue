@@ -1,18 +1,61 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
+
 // Inyectamos la sesión del cliente para contrastar cuál es la activa
 const { user } = useUserSession()
 
+// 2. Disparador numérico para resetear la caché
+const triggerRef = ref(0)
+
 // Consumimos el endpoint que creamos en el paso anterior
-const { data: list, refresh } = await useFetch('/api/auth/sessions')
+const { data: list, refresh } = await useAsyncData(
+  'sessions-list-data',
+  () => $fetch<any[]>('/api/auth/sessions'),
+  {
+    watch: [triggerRef],
+    lazy: true,
+    default: () => [] // Evita que 'list' sea null al arrancar
+  }
+)
 
 // Función para revocar accesos
 async function closeSession(id: string) {
-  await $fetch('/api/auth/sessions', {
-    method: 'DELETE',
-    body: { targetSessionId: id }
-  })
-  await refresh() // Actualiza la lista en pantalla
+  if (!id) return
+  try {
+    await $fetch('/api/auth/sessions', {
+      method: 'DELETE',
+      body: { targetSessionId: id }
+    })
+    triggerRef.value++
+  } catch (err) {
+    console.error('Error al revocar la sesión:', err)
+  }
 }
+
+// Control del temporizador
+let refreshInterval: any = null
+
+onMounted(async () => {
+  // Disparamos un refresco manual inicial para asegurar que la lista cargue al milisegundo
+  await refresh()
+  // console.log('🏁 [SESSIONS] Componente montado con éxito en el cliente. Activando temporizador...')
+
+  // 👑 EL RELOJ DE 15 SEGUNDOS INEXTINGUIBLE:
+  // Incrementamos el trigger de forma atómica. Esto forzará el repintado en pantalla sí o sí.
+  refreshInterval = setInterval(() => {
+    triggerRef.value++
+    // Imprime un número incremental para que veas en la consola que avanza
+    // console.log(`⏰ [SESSIONS] Ciclo ejecutado con éxito. Vuelta número: ${triggerRef.value}`)
+  }, 15000)
+})
+
+// Limpieza estricta de memoria al cambiar de pestaña
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    // console.log('🧹 [SESSIONS] Temporizador destruido limpiamente.')
+  }
+})
 </script>
 
 <template>
@@ -28,8 +71,8 @@ async function closeSession(id: string) {
 
     <div class="divide-y border rounded-lg overflow-hidden bg-white dark:bg-neutral-900">
       <div
-        v-for="item in list"
-        :key="item.id"
+        v-for="item in (list || [])"
+        :key="item.sesionId"
         class="flex justify-between items-center p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
       >
         <div class="flex items-center gap-3">
@@ -55,9 +98,6 @@ async function closeSession(id: string) {
               IP: {{ item.direccionIp }} • Conectado: {{ new Date(item.sesionCreadaEn).toLocaleString() }} •
               Nombre: {{ item.usuarioNombreReal }}
             </p>
-            <!-- <p class="text-xs text-neutral-400">
-              Id: {{ item.sesionId }}
-            </p> -->
           </div>
         </div>
 
@@ -68,6 +108,10 @@ async function closeSession(id: string) {
           label="Cerrar sesión"
           @click="closeSession(item.sesionId)"
         />
+      </div>
+      <!-- Estado visual si no hay sesiones vivas en el array -->
+      <div v-if="!(list || []).length" class="p-8 text-center text-sm text-neutral-400 italic">
+        Buscando dispositivos activos en PostgreSQL...
       </div>
     </div>
   </div>

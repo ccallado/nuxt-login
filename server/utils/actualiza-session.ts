@@ -103,7 +103,7 @@ export const actualizaSession = async (event: H3Event) => {
       sessionCreatedAt: new Date()
     }
   })
-  console.log({ session })
+  // console.log({ session })
 
   // const cookieRealEnviada = JSON.parse(JSON.stringify(flattenedAuths))
   // console.log({ autorización: cookieRealEnviada })

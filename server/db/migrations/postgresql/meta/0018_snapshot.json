@@ -1,0 +1,678 @@
+{
+  "id": "b8e2840b-edc8-47c6-bff4-8502d017267b",
+  "prevId": "3aac4a29-ae72-416c-97d8-f78508dfa5d6",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.account": {
+      "name": "account",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "providerAccountId": {
+          "name": "providerAccountId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emailVerified": {
+          "name": "emailVerified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "account_user_id_users_id_fk": {
+          "name": "account_user_id_users_id_fk",
+          "tableFrom": "account",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "unique_prov_provaccount": {
+          "name": "unique_prov_provaccount",
+          "nullsNotDistinct": false,
+          "columns": [
+            "provider",
+            "providerAccountId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.master_roles": {
+      "name": "master_roles",
+      "schema": "",
+      "columns": {
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "authorizations": {
+          "name": "authorizations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.navigation_menu": {
+      "name": "navigation_menu",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "navigation_menu_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "etiqueta": {
+          "name": "etiqueta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direccion": {
+          "name": "direccion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "obj_req": {
+          "name": "obj_req",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "act_req": {
+          "name": "act_req",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "var_req": {
+          "name": "var_req",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_group_two": {
+          "name": "is_group_two",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.pages": {
+      "name": "pages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "meta": {
+          "name": "meta",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content": {
+          "name": "content",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "pages_slug_unique": {
+          "name": "pages_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.propiedades": {
+      "name": "propiedades",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "calle": {
+          "name": "calle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "número": {
+          "name": "número",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "escalera": {
+          "name": "escalera",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "planta": {
+          "name": "planta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "letra": {
+          "name": "letra",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descripción": {
+          "name": "descripción",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "propietarioId": {
+          "name": "propietarioId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creadaPorId": {
+          "name": "creadaPorId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modifiedAt": {
+          "name": "modifiedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificadoPorId": {
+          "name": "modificadoPorId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "propiedades_propietarioId_users_id_fk": {
+          "name": "propiedades_propietarioId_users_id_fk",
+          "tableFrom": "propiedades",
+          "tableTo": "users",
+          "columnsFrom": [
+            "propietarioId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "propiedades_creadaPorId_users_id_fk": {
+          "name": "propiedades_creadaPorId_users_id_fk",
+          "tableFrom": "propiedades",
+          "tableTo": "users",
+          "columnsFrom": [
+            "creadaPorId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "propiedades_modificadoPorId_users_id_fk": {
+          "name": "propiedades_modificadoPorId_users_id_fk",
+          "tableFrom": "propiedades",
+          "tableTo": "users",
+          "columnsFrom": [
+            "modificadoPorId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sap_object_fields": {
+      "name": "sap_object_fields",
+      "schema": "",
+      "columns": {
+        "object_name": {
+          "name": "object_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "field_name": {
+          "name": "field_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sap_object_fields_object_name_sap_objects_master_object_name_fk": {
+          "name": "sap_object_fields_object_name_sap_objects_master_object_name_fk",
+          "tableFrom": "sap_object_fields",
+          "tableTo": "sap_objects_master",
+          "columnsFrom": [
+            "object_name"
+          ],
+          "columnsTo": [
+            "object_name"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sap_object_fields_object_name_field_name_pk": {
+          "name": "sap_object_fields_object_name_field_name_pk",
+          "columns": [
+            "object_name",
+            "field_name"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sap_objects_master": {
+      "name": "sap_objects_master",
+      "schema": "",
+      "columns": {
+        "object_name": {
+          "name": "object_name",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_sessions": {
+      "name": "user_sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "device": {
+          "name": "device",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_sessions_user_id_users_id_fk": {
+          "name": "user_sessions_user_id_users_id_fk",
+          "tableFrom": "user_sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emailVerified": {
+          "name": "emailVerified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar": {
+          "name": "avatar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vacío'"
+        },
+        "bio": {
+          "name": "bio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modifiedAt": {
+          "name": "modifiedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "auth_updated_at": {
+          "name": "auth_updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users_to_roles": {
+      "name": "users_to_roles",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_name": {
+          "name": "role_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "users_to_roles_user_id_users_id_fk": {
+          "name": "users_to_roles_user_id_users_id_fk",
+          "tableFrom": "users_to_roles",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "users_to_roles_role_name_master_roles_name_fk": {
+          "name": "users_to_roles_role_name_master_roles_name_fk",
+          "tableFrom": "users_to_roles",
+          "tableTo": "master_roles",
+          "columnsFrom": [
+            "role_name"
+          ],
+          "columnsTo": [
+            "name"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "users_to_roles_user_id_role_name_pk": {
+          "name": "users_to_roles_user_id_role_name_pk",
+          "columns": [
+            "user_id",
+            "role_name"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
