@@ -85,8 +85,8 @@ watch(pageData, async (newPage) => {
         dataRows[block.id] = []
         const res = await $fetch<any[]>(`/api/db/query?table=${block.tableName}`)
         if (res) {
-          dataRows[block.id] = res.rows || []
-          tableUserFields[block.id] = res.userFields || [] // ◄— Guardamos qué columnas son usuarios
+          dataRows[block.id] = [...(res.rows || [])]
+          tableUserFields[block.id] = res.userFields || []
         }
       } catch (err) {
         console.warn(`No se pudo leer la tabla física '${block.tableName}', usando datos de respaldo.`);
@@ -165,10 +165,11 @@ async function onSubmit(event: FormSubmitEvent<any>, apiPutUrl: string) {
     })
 
     // Lanzamos la inserción hacia PostgreSQL enviando el payload limpio de objetos
-    await $fetch(apiPutUrl || '/api/db/save-form?table=propiedades', {
+    const inserted = await $fetch(apiPutUrl || '/api/db/save-form?table=propiedades', {
       method: 'POST',
       body: payloadParaPostgres
     })
+    console.log('INSERTADO:', inserted)
 
     toast.add({ title: 'Éxito', description: 'Cambios grabados con éxito.', color: 'success' })
 
@@ -182,6 +183,7 @@ async function onSubmit(event: FormSubmitEvent<any>, apiPutUrl: string) {
       for (const block of pageData.value.content.blocks) {
         if (block.type === 'dynamic-table' && block.tableName) {
           const res = await $fetch<any>(`/api/db/query?table=${block.tableName}`)
+          console.log('FILAS:', res.rows)
           if (res) {
             dataRows[block.id] = res.rows || []
 
@@ -550,8 +552,8 @@ async function onSubmit(event: FormSubmitEvent<any>, apiPutUrl: string) {
                   <!-- FILAS DE LA TABLA -->
                   <tbody class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-900 dark:text-gray-100">
                     <tr
-                      v-for="(row, rIdx) in (dataRows[block.id] || [])"
-                      :key="rIdx"
+                      v-for="row in (dataRows[block.id] || [])"
+                      :key="row.id"
                       class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors"
                     >
                       <!-- CORRECCIÓN 2: Pasamos el objeto block completo -->

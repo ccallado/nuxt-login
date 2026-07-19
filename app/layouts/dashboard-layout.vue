@@ -60,30 +60,44 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import { useRoute } from 'vue-router'
 import { useSAPAuth } from '~/composables/useSAPAuth'
 
+const config = useRuntimeConfig()
 const totalSesionesVivas = ref(0)
 
 // Función que consulta el contador rápido
 const fetchSessionsCount = async () => {
   try {
     const res = await $fetch<{ total: number }>('/api/admin/sessions-count')
-    totalSesionesVivas.value = res.total
-  } catch (err) {
+    if (typeof res.total === 'number') {
+      totalSesionesVivas.value = res.total
+    }
+  } catch {
     console.warn('No se pudo actualizar el conteo de sesiones')
   }
 }
 
-let intervalId: any = null
+let intervalId: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
-  // Primer disparo inmediato al entrar
+  // 1. Limpieza preventiva: Si por un re-renderizado ya existía un reloj activo, lo destruimos
+  if (intervalId) clearInterval(intervalId)
+
+  // 2. Primer disparo inmediato al entrar para que el Badge no salga vacío
   fetchSessionsCount()
 
-  // 👑 REFRESCO EN TIEMPO REAL: Cada 15 segundos le pregunta a Postgres si hay cambios
-  intervalId = setInterval(fetchSessionsCount, 15000)
+  // 3. 👑 EL RELOJ CONTROLADO: Ejecuta la consulta exclusivamente cada 15 segundos
+  // console.log({intervaloTiempoSesiones: config.public.intervaloTiempoSesiones})
+  intervalId = setInterval(fetchSessionsCount, config.public.intervaloTiempoSesiones)
+  // intervalId = setInterval(fetchSessionsCount, 15000)
 })
 
 onUnmounted(() => {
-  if (intervalId) clearInterval(intervalId)
+  if (intervalId) {
+    clearInterval(intervalId)
+    intervalId = null
+    if (import.meta.dev) {
+      console.log('🧹 [LAYOUT] Temporizador de sesiones destruido.')
+    }
+  }
 })
 
 interface CustomNavigationItem extends NavigationMenuItem {
@@ -100,7 +114,7 @@ const collapsed = ref(false)
 const { checkAuthority } = useSAPAuth()
 
 // 1. 👑 CONSULTA MAESTRA: Solicitamos a tu API el árbol estructurado del menú de Postgres
-// Usamos 'getCachedData: () => undefined' para forzar el conteo real de sesiones en cada clic
+// Evitamos reutilizar datos cacheados para obtener siempre la versión más reciente del menú.
 const { data: dbMenuResponse } = await useFetch<CustomNavigationItem[][]>('/api/admin/menu-items', {
   getCachedData: () => undefined
 })
@@ -123,18 +137,20 @@ function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
     }
 
     // 👑 CORRECCIÓN 3: Pasamos 'badge' explícitamente para asegurar que Nuxt UI v3 lo renderice
+    const isSessionItem =
+      item.to?.toString().toLowerCase().includes('sesion') ||
+      item.label?.toLowerCase().includes('sesion')
+
     const processedItem: NavigationMenuItem = {
       ...item,
-      badge: (item.to?.toString().toLowerCase().includes('sesion')
-        || item.label?.toLowerCase().includes('sesion'))
-        ? totalSesionesVivas.value
-        : item.badge,
-
-      onSelect: () => { open.value = false }
+      badge: isSessionItem ? totalSesionesVivas.value : item.badge,
+      onSelect: () => {
+        open.value = false
+      }
     }
 
     // Inyectamos el cierre del drawer lateral automático para mejorar la UX móvil
-    processedItem.onSelect = () => { open.value = false }
+    // processedItem.onSelect = () => { open.value = false }
 
     // Procesamos recursivamente también los hijos (children) mapeados de la tabla
     if (item.children) {

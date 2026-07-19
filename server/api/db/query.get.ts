@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // 1. Descargar las filas de la tabla física (Límite 100)
-    const result = await db.execute(sql.raw(`SELECT * FROM "${tableName}" LIMIT 100`))
+    const result = await db.execute(sql.raw(`SELECT * FROM "${tableName}" ORDER BY id DESC LIMIT 100`))
     const cleanRows = Array.isArray(result) ? result : (result.rows || [])
 
     // 2. DETECCIÓN AUTOMÁTICA EN POSTGRESQL:

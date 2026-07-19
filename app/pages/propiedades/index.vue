@@ -46,7 +46,7 @@ const { data: propiedades, status } = await useFetch('/api/propiedades', {
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
-  autobj: ['USUARIO'],
+  autobj: ['PROPIEDADES'],
   autact: ['01'],
   autvar: {}
 })

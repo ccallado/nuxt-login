@@ -67,10 +67,10 @@ function formatDate(dateString: string) {
 
 <!-- pages/admin/pages-list.vue - PARTE 2 -->
 <template>
-  <NuxtLayout :name="pageData?.meta?.layout || 'dashboard-layout'">
+  <NuxtLayout name="dashboard-layout">
     <UDashboardPanel grow class="flex flex-col min-w-0 w-full">
       <!-- 👑 BARRA SUPERIOR INTEGRADA: Aquí es donde Nuxt UI inyectará de forma AUTOMÁTICA el botón de ocultar sidebar -->
-      <UDashboardNavbar :title="pageData?.title || 'Panel Dinámico'">
+      <UDashboardNavbar title='Panel Dinámico'>
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

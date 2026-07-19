@@ -3,6 +3,8 @@ import { userSessions, users } from '#server/db/schema'
 
 export default defineEventHandler(async (event) => {
   // 1. CONTROL DE ACCESO
+  const config = useRuntimeConfig()
+  const intervaloExpiracion = config.public.intervaloSesionesInactivas
   const session = await getUserSession(event)
   if (!session?.user) throw createError({ statusCode: 401, message: 'No autorizado' })
 
@@ -16,7 +18,7 @@ export default defineEventHandler(async (event) => {
       await db
         .delete(userSessions)
         .where(
-          lt(userSessions.modifiedAt, sql`NOW() - INTERVAL '5 minutes'`)
+          lt(userSessions.modifiedAt, sql`NOW() - INTERVAL ${intervaloExpiracion}`)
         )
       // console.log('🧹 [GARBAGE COLLECTOR] Sesiones inactivas de más de 30 min purgadas con éxito.')
     } catch (cleanErr: any) {

@@ -18,9 +18,12 @@ export default defineNuxtConfig({
     },
 
     secretJwtKey: '',
+
     public: {
       baseApi: '',
-      appUrl: process.env.APP_URL || 'http://localhost:3000'
+      appUrl: process.env.APP_URL || 'http://localhost:3000',
+      intervaloTiempoSesiones: 10,
+      intervaloSesionesInactivas: '2 minutes'
     }
   },
   routeRules: {

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
+const config = useRuntimeConfig()
+// console.log({ intervalo: config.public.intervaloTiempoSesiones })
+
 // Inyectamos la sesión del cliente para contrastar cuál es la activa
 const { user } = useUserSession()
 
@@ -42,11 +45,13 @@ onMounted(async () => {
 
   // 👑 EL RELOJ DE 15 SEGUNDOS INEXTINGUIBLE:
   // Incrementamos el trigger de forma atómica. Esto forzará el repintado en pantalla sí o sí.
+  // console.log({ intervalo: config.public.intervaloTiempoSesiones })
   refreshInterval = setInterval(() => {
     triggerRef.value++
     // Imprime un número incremental para que veas en la consola que avanza
     // console.log(`⏰ [SESSIONS] Ciclo ejecutado con éxito. Vuelta número: ${triggerRef.value}`)
-  }, 15000)
+  }, config.public.intervaloTiempoSesiones)
+  // }, 15000)
 })
 
 // Limpieza estricta de memoria al cambiar de pestaña

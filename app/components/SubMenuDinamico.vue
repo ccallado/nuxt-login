@@ -16,23 +16,27 @@ interface CustomNavigationItem extends NavigationMenuItem {
 const route = useRoute()
 const { checkAuthority } = useSAPAuth()
 
+// 1. Inyectamos la sesión del usuario del cliente
+const { user } = useUserSession()
+
 // 👑 CONSULTA EN CASCADA CON WATCH AUTOMÁTICO:
 // El componente vigila route.path. Si cambias entre páginas con menú, se refresca solo.
 const { data: dbSubMenu } = await useAsyncData(
   'submenu-dynamic-component-key',
   () => $fetch<CustomNavigationItem[][]>(`/api/admin/submenu-items?path=${encodeURIComponent(route.path)}`),
-  { watch: [() => route.path] }
+  { watch: [() => route.path, user] }
 )
 
 // Función recursiva para filtrar dinámicamente según checkAuthority de SAP
 function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
   return items.flatMap((item) => {
-    const hasNoRestrictions = !item.objReq && !item.actReq && !item.varReq
-    const orgFilters = item.varReq ? { FIELD: item.varReq } : undefined
+    console.log({ item })
+    const hasNoRestrictions = !item.objreq && !item.actreq && !item.varreq
+    const orgFilters = item.varreq ? { FIELD: item.varreq } : undefined
 
     const isAuthorized = hasNoRestrictions || checkAuthority(
-      item.objReq ?? '',
-      item.actReq ?? '',
+      item.objreq ?? '',
+      item.actreq ?? '',
       orgFilters
     )
 
