@@ -20,73 +20,55 @@ interface CustomNavigationItem extends NavigationMenuItem {
   children?: CustomNavigationItem[]
 }
 
+// En tu archivo de Perfil - REEMPLAZAR EL PASO 3 POR ESTA CONSULTA DINÁMICA
+
+const route = useRoute()
 const { checkAuthority } = useSAPAuth()
 
-// 3. Declaramos los enlaces base usando la interfaz extendida
-const rawLinks: CustomNavigationItem[][] = [[{
-  label: 'Mi perfil',
-  icon: 'i-lucide-user',
-  to: '/admin/settings',
-  exact: true,
-  objReq: 'USUARIO',
-  actReq: '01',
-  varReq: ''
-}, {
-  label: 'Usuarios',
-  icon: 'i-lucide-users',
-  to: '/admin/settings/members',
-  objReq: 'ADMIN',
-  actReq: '01',
-  varReq: ''
-}, {
-  label: 'Sesiones',
-  icon: 'i-lucide-bell',
-  to: '/admin/settings/sesiones',
-  objReq: 'USUARIO',
-  actReq: '01',
-  varReq: ''
-}, {
-  label: 'Roles',
-  icon: 'lucide:user-round-check',
-  to: '/admin/settings/roles',
-  objReq: 'ADMIN',
-  actReq: '01',
-  varReq: ''
-}, {
-  label: 'Cambio de Contraseña',
-  icon: 'i-lucide-shield',
-  to: '/admin/settings/security',
-  objReq: 'USUARIO',
-  actReq: '01',
-  varReq: ''
-}], [{
-  label: 'Documentación',
-  icon: 'i-lucide-book-open',
-  to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-  target: '_blank'
-}]] satisfies CustomNavigationItem[][]
+// 3. 👑 CONSULTA DINÁMICA: Traemos los enlaces del submenú directo de PostgreSQL indicando el padre
+const { data: dbSubMenu, refresh } = await useAsyncData(
+  `submenu-dynamic-navigation`, // Usamos una llave base estable para el canal
+  () => $fetch<CustomNavigationItem[][]>(`/api/admin/submenu-items?path=${encodeURIComponent(route.path)}`),
+  {
+    watch: [() => route.path] // ◄— REFRESH REACTIVO AUTOMÁTICO EN CADA CLIC
+  }
+)
 
-// 4. Función recursiva para filtrar dinámicamente según checkAuthority
+// 4. Función recursiva para filtrar dinámicamente según checkAuthority (Se queda exactamente igual)
 function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
   return items.flatMap((item) => {
     const hasNoRestrictions = !item.objReq && !item.actReq && !item.varReq
     const orgFilters = item.varReq ? { FIELD: item.varReq } : undefined
 
-    // Ejecutamos tu función con los 3 argumentos que espera el composable
     const isAuthorized = hasNoRestrictions || checkAuthority(
       item.objReq ?? '',
       item.actReq ?? '',
       orgFilters
     )
 
-    if (!isAuthorized) {
-      return []
+    if (!isAuthorized) return []
+
+    // Tolerancia al booleano 'exact' que viene de Postgres como string o bit
+    const isExact = item.exact === true ||
+                    String(item.exact) === 'true' ||
+                    String(item.exact) === '1' ||
+                    item.to === '/admin/settings' // ◄— Fallback de seguridad estricto para la raíz
+    // 3. 👑 PROCESAMIENTO RECURSIVO DE LOS HIJOS (Soporte nativo para children)
+    // Si este ítem (ej: 'Páginas') tiene elementos en su array de hijos,
+    // los pasamos de nuevo por la función para filtrar también sus permisos SAP.
+    let processedChildren: NavigationMenuItem[] | undefined = undefined
+    if (item.children && item.children.length > 0) {
+      processedChildren = processMenuItems(item.children)
     }
 
-    const processedItem: NavigationMenuItem = { ...item }
-
-    if (item.children) {
-      processedItem.children = processMenuItems(item.children)
+    // 4. CONSTRUCCIÓN DEL OBJETO FINAL COMPATIBLE CON <UNavigationMenu>
+    const processedItem: NavigationMenuItem = {
+      label: item.label,
+      icon: item.icon,
+      to: item.to || undefined, // Si no tiene enlace (como 'Páginas'), lo dejamos undefined para que actúe solo como desplegable
+      target: item.target || undefined,
+      exact: isExact,
+      children: processedChildren // 👈 Inyectamos los hijos ya procesados y autorizados
     }
 
     return [processedItem]
@@ -95,8 +77,17 @@ function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
 
 // 5. Variable reactiva final que consume el componente UNavigationMenu
 const links = computed<NavigationMenuItem[][]>(() => {
-  return rawLinks.map(group => processMenuItems(group))
+  // Si la base de datos aún no responde, devolvemos un array vacío preventivo
+  if (!dbSubMenu.value) return [[], []]
+  return dbSubMenu.value.map(group => processMenuItems(group))
 })
+if (import.meta.server) {
+  console.log('SSR links:', links.value)
+}
+
+if (import.meta.client) {
+  console.log('Client links:', links.value)
+}
 </script>
 
 <template>
@@ -111,12 +102,23 @@ const links = computed<NavigationMenuItem[][]>(() => {
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar>
+      <UDashboardToolbar
+        class="overflow-visible"
+      >
         <!-- NOTE: El array reactivo computado 'links' filtrará las pestañas automáticamente aquí -->
         <UNavigationMenu
           :items="links"
           highlight
           class="-mx-1 flex-1"
+          :ui="{
+            // 👑 CORRECCIÓN MAESTRA PARA NUXT UI v3/v4:
+            // Forzamos al contenedor flotante del Popover a no limitar la altura de las sublistas
+            popover: {
+              content: 'max-h-[none]! h-auto! overflow-visible! min-w-48 shadow-xl border border-gray-800'
+            },
+            // Aseguramos que la lista interna de links hijos no tenga desbordamiento oculto
+            childList: 'max-h-[none]! h-auto! overflow-visible!'
+          }"
         />
       </UDashboardToolbar>
     </template>

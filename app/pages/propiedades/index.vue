@@ -26,7 +26,10 @@
           style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;"
         >
           <h3>{{ p.titulo }}</h3>
-          <p><strong>Precio:</strong> ${{ p.precio.toLocaleString() }}</p>
+          <p>
+            <strong>Precio:</strong>
+            {{ p.precio !== null && p.precio !== undefined ? `$${Number(p.precio).toLocaleString('es-ES')}` : 'Consultar precio' }}
+          </p>
           <p>{{ p.descripcion }}</p>
         </article>
       </section>
@@ -36,7 +39,10 @@
 
 <script setup>
 // UseFetch aprovecha el SSR de Nuxt 4 de forma nativa
-const { data: propiedades, status } = await useFetch('/api/propiedades')
+const { data: propiedades, status } = await useFetch('/api/propiedades', {
+  default: () => []
+})
+
 definePageMeta({
   middleware: ['authenticated'],
   layout: 'dashboard-layout',
