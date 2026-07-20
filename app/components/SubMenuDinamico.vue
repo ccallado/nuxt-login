@@ -30,7 +30,7 @@ const { data: dbSubMenu } = await useAsyncData(
 // Función recursiva para filtrar dinámicamente según checkAuthority de SAP
 function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
   return items.flatMap((item) => {
-    console.log({ item })
+    // console.log({ item })
     const hasNoRestrictions = !item.objreq && !item.actreq && !item.varreq
     const orgFilters = item.varreq ? { FIELD: item.varreq } : undefined
 

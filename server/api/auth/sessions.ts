@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
       await db
         .delete(userSessions)
         .where(
-          lt(userSessions.modifiedAt, sql`NOW() - INTERVAL ${intervaloExpiracion}`)
+          lt(userSessions.modifiedAt, sql`NOW() - CAST(${intervaloExpiracion} AS interval)`)
         )
       // console.log('🧹 [GARBAGE COLLECTOR] Sesiones inactivas de más de 30 min purgadas con éxito.')
     } catch (cleanErr: any) {
@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
         dispositivo: userSessions.device,       // userSessions.device ➔ dispositivo
         direccionIp: userSessions.ipAddress,     // userSessions.ipAddress ➔ direccionIp
         sesionCreadaEn: userSessions.createdAt,  // userSessions.createdAt ➔ sesionCreadaEn
+        sesionModificadaA: userSessions.modifiedAt,
 
         // Campos del Usuario Relacionado
         usuarioId: users.id,

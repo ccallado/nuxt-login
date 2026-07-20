@@ -100,8 +100,10 @@ onUnmounted(() => {
               </UBadge>
             </div>
             <p class="text-xs text-neutral-400">
-              IP: {{ item.direccionIp }} • Conectado: {{ new Date(item.sesionCreadaEn).toLocaleString() }} •
-              Nombre: {{ item.usuarioNombreReal }}
+              IP: {{ item.direccionIp }}
+              • Conectado: {{ new Date(item.sesionCreadaEn).toLocaleString() }}
+              • UltCambio: {{ new Date(item.sesionModificadaA).toLocaleString() }}
+              • Correo: {{ item.usuarioEmail }}
             </p>
           </div>
         </div>

@@ -113,15 +113,27 @@ const open = ref(false)
 const collapsed = ref(false)
 const { checkAuthority } = useSAPAuth()
 
-// 1. 👑 CONSULTA MAESTRA: Solicitamos a tu API el árbol estructurado del menú de Postgres
 // Evitamos reutilizar datos cacheados para obtener siempre la versión más reciente del menú.
 const { data: dbMenuResponse } = await useFetch<CustomNavigationItem[][]>('/api/admin/menu-items', {
   getCachedData: () => undefined
 })
 
-// 2. FUNCIÓN RECURSIVA: Filtra en el cliente los accesos no autorizados por SAP (Tu lógica intacta)
+// Inyectamos el estado de autenticación reactivo de Nuxt
+const { loggedIn } = useUserSession()
+
+// FUNCIÓN RECURSIVA: Filtra en el cliente los accesos no autorizados por SAP (Tu lógica intacta)
 function processMenuItems(items: CustomNavigationItem[]): NavigationMenuItem[] {
   return items.flatMap((item) => {
+    // Si el usuario YA ha iniciado sesión (loggedIn === true) y el enlace actual
+    // apunta a '/register', 'login' o es el Home público que no debe ver dentro del panel,
+    // lo removemos del array devolviendo un elemento vacío al instante.
+    if (loggedIn.value) {
+      const pathDestino = item.to?.toString().toLowerCase() || ''
+      if (pathDestino === '/register' || pathDestino === '/login') {
+        return [] // Desaparece del menú de forma automática
+      }
+    }
+
     const hasNoRestrictions = !item.objReq && !item.actReq && !item.varReq
     const orgFilters = item.varReq ? { FIELD: item.varReq } : undefined
 

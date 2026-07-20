@@ -33,7 +33,8 @@ async function revokeSession(sessionId: string) {
           <span class="text-xs text-gray-500">
             IP: {{ sess.direccionIp }}
             • Conectado: {{ new Date(sess.sesionCreadaEn).toLocaleString() }}
-            • Nombre: {{ sess.usuarioNombreReal }}
+            • UltCambio: {{ new Date(sess.sesionModificadaA).toLocaleString() }}
+            • Correo: {{ sess.usuarioEmail }}
           </span>
         </div>
 
